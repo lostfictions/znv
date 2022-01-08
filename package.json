@@ -1,0 +1,61 @@
+{
+  "name": "znv",
+  "version": "0.0.1",
+  "description": "validate env vars with zod",
+  "keywords": [
+    "env",
+    "zod",
+    "validation"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "s <https://github.com/lostfictions>",
+  "homepage": "https://github.com/lostfictions/znv",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lostfictions/znv.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lostfictions/znv/issues"
+  },
+  "files": [
+    "!dist/**/*.test.*",
+    "dist/"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf dist/ && tsc",
+    "test": "run-p -cl test:*",
+    "test:ts": "tsc --noEmit",
+    "test:eslint": "eslint --color src",
+    "test:jest": "echo 'fixme! then change this to jest --colors'",
+    "test:prettier": "prettier -l 'src/**/*'",
+    "prettier": "prettier 'src/**/*' --write",
+    "jest": "jest --colors --watch",
+    "prepublishOnly": "run-s -l test build"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "zod": "^3.11.6"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.6",
+    "eslint": "^8.6.0",
+    "eslint-config-lostfictions": "^3.1.0",
+    "jest": "^27.4.7",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "rootDir": "src",
+    "globals": {
+      "ts-jest": {
+        "isolatedModules": true
+      }
+    }
+  }
+}
