@@ -4,10 +4,15 @@ import { assertNever } from "./util";
 
 const { ZodFirstPartyTypeKind: TypeName } = z;
 
+/**
+ * Given a Zod schema, returns a function that tries to convert a string to a
+ * valid input type for the schema.
+ */
 export function getStringPreprocessorByZodType(
-  spec: z.ZodFirstPartySchemaTypes
+  schema: z.ZodFirstPartySchemaTypes
 ): (arg: string | undefined) => unknown {
-  const { typeName } = spec._def;
+  const def = schema._def;
+  const { typeName } = def;
 
   switch (typeName) {
     case TypeName.ZodString:
@@ -51,15 +56,14 @@ export function getStringPreprocessorByZodType(
       };
 
     case TypeName.ZodEffects:
-      // eslint-disable-next-line unicorn/consistent-destructuring -- false positive
-      return getStringPreprocessorByZodType(spec._def.schema);
+      return getStringPreprocessorByZodType(def.schema);
 
     case TypeName.ZodDefault:
       // eslint-disable-next-line unicorn/consistent-destructuring -- false positive
-      return getStringPreprocessorByZodType(spec._def.innerType);
+      return getStringPreprocessorByZodType(def.innerType);
 
     case TypeName.ZodOptional: {
-      const { innerType } = spec._def;
+      const { innerType } = def;
       return (arg) => {
         if (arg == null) return undefined;
         return getStringPreprocessorByZodType(innerType);
@@ -67,7 +71,7 @@ export function getStringPreprocessorByZodType(
     }
 
     case TypeName.ZodNullable: {
-      const { innerType } = spec._def;
+      const { innerType } = def;
       return (arg) => {
         if (arg == null) return null;
         return getStringPreprocessorByZodType(innerType);
@@ -81,7 +85,7 @@ export function getStringPreprocessorByZodType(
       };
 
     case TypeName.ZodLiteral:
-      switch (typeof spec._def.value) {
+      switch (typeof def.value) {
         case "number":
           return getStringPreprocessorByZodType({
             _def: { typeName: TypeName.ZodNumber },
@@ -124,9 +128,13 @@ export function getStringPreprocessorByZodType(
   }
 }
 
-export function getPreprocessedValidator(spec: z.ZodFirstPartySchemaTypes) {
+/**
+ * Given a Zod schema, return the schema wrapped in a preprocessor that tries to
+ * convert a string to the schema's input type.
+ */
+export function getPreprocessedValidator(schema: z.ZodFirstPartySchemaTypes) {
   return z.preprocess(
-    getStringPreprocessorByZodType(spec) as (arg: unknown) => unknown,
-    spec
+    getStringPreprocessorByZodType(schema) as (arg: unknown) => unknown,
+    schema
   );
 }

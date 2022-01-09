@@ -1,9 +1,10 @@
 {
   "name": "znv",
   "version": "0.0.1",
-  "description": "validate env vars with zod",
+  "description": "Parse your environment with Zod schemas",
   "keywords": [
     "env",
+    "process.env",
     "zod",
     "validation"
   ],

@@ -1,4 +1,4 @@
 export * as z from "zod";
 export * from "./parse-env";
-export * from "./parse";
+export * from "./parse-core";
 export * from "./preprocessors";

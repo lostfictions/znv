@@ -1,16 +1,26 @@
-import { parse, ParseOptions, Specs } from "./parse";
+import { parseCore, ParseOptions, Schemas } from "./parse-core";
+
+import type { DeepReadonlyObject } from "./util";
 
 export interface ParseEnvOptions extends ParseOptions {
+  /**
+   * Should the environment be augmented by reading in a `.env` file?
+   */
   dotenv?: boolean;
 }
 
+/**
+ * Parses `process.env` using the provided map of Zod schemas (optionally
+ * augmenting it by reading a `.env` file) and returns the immutably-typed,
+ * parsed environment.
+ */
 export function parseEnv<T>(
-  specs: Specs<T>,
+  schemas: Schemas<T>,
   { dotenv = true, ...parseOptions }: ParseEnvOptions = {}
-): T {
+): DeepReadonlyObject<T> {
   if (dotenv) {
     require("dotenv").config();
   }
 
-  return parse(process.env, specs, parseOptions);
+  return parseCore(process.env, schemas, parseOptions);
 }
