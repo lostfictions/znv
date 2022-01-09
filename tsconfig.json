@@ -10,10 +10,11 @@
     "declaration": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "esModuleInterop": true,
     "sourceMap": true,
     "rootDir": "./src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "include": [
     "src"
