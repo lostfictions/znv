@@ -17,6 +17,7 @@ export function getStringPreprocessorByZodType(
   switch (typeName) {
     case TypeName.ZodString:
     case TypeName.ZodEnum:
+    case TypeName.ZodUndefined:
       return (arg) => arg;
 
     case TypeName.ZodNumber:
@@ -51,6 +52,7 @@ export function getStringPreprocessorByZodType(
     case TypeName.ZodTuple:
     case TypeName.ZodRecord:
       return (arg) => {
+        // neither `undefined` nor the empty string are valid json.
         if (!arg) return arg;
         return JSON.parse(arg);
       };
@@ -80,7 +82,12 @@ export function getStringPreprocessorByZodType(
 
     case TypeName.ZodDate:
       return (arg) => {
-        if (!arg) return arg;
+        // calling the 0-arity Date constructor makes a new Date with the
+        // current time, which definitely isn't what we want here. but calling
+        // the 1-arity Date constructor, even with `undefined`, should result in
+        // "invalid date" for values that aren't parseable. let's be paranoid
+        // and filter out `undefined` anyway -- it makes typescript happier too.
+        if (arg == null) return arg;
         return new Date(arg);
       };
 
@@ -102,6 +109,13 @@ export function getStringPreprocessorByZodType(
           return (arg) => arg;
       }
 
+    case TypeName.ZodNull:
+      return (arg) => {
+        // convert undefined to null
+        if (arg == null) return null;
+        return arg;
+      };
+
     case TypeName.ZodUnion:
     case TypeName.ZodIntersection:
     case TypeName.ZodNativeEnum:
@@ -109,8 +123,6 @@ export function getStringPreprocessorByZodType(
         `Zod type not yet supported: "${typeName}" (PRs welcome)`
       );
 
-    case TypeName.ZodUndefined:
-    case TypeName.ZodNull:
     case TypeName.ZodAny:
     case TypeName.ZodUnknown:
     case TypeName.ZodVoid:
@@ -120,7 +132,7 @@ export function getStringPreprocessorByZodType(
     case TypeName.ZodPromise:
     case TypeName.ZodMap:
     case TypeName.ZodSet:
-      throw new Error(`Zod type not supported at top level: ${typeName}`);
+      throw new Error(`Zod type not supported: ${typeName}`);
 
     default: {
       assertNever(typeName);
