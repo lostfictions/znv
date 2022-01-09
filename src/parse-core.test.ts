@@ -21,6 +21,22 @@ describe("parseCore", () => {
     });
   });
 
+  it("validates and throws on invalid env values", () => {
+    // TODO: use more specific throw matcher
+    expect(() =>
+      parseCore(
+        {
+          HOST: "localhost",
+          PORT: "50505050",
+        },
+        {
+          HOST: z.string(),
+          PORT: z.number().int().nonnegative().lte(65535),
+        }
+      )
+    ).toThrow();
+  });
+
   it("strips excess properties", () => {
     const x = parseCore(
       { HOST: "localhost", PORT: "5050" },
@@ -32,7 +48,7 @@ describe("parseCore", () => {
     });
   });
 
-  it("handles a detailed schema with defaults", () => {
+  it("handles a detailed spec with defaults", () => {
     const x = parseCore(
       {
         HOST: "localhost",
@@ -68,5 +84,47 @@ describe("parseCore", () => {
         }
       )
     ).toThrow();
+  });
+
+  it("handles a simple schema with a .transform postprocessor", () => {
+    const x = parseCore(
+      {
+        FUN_LEVEL: "8",
+      },
+      {
+        FUN_LEVEL: z
+          .number()
+          .int()
+          .transform((n) => String(n)),
+      }
+    );
+
+    // @ts-expect-error (2322) -- shouldn't be assignable to number
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fun: number = x.FUN_LEVEL;
+
+    expect(x.FUN_LEVEL).toBe("8");
+  });
+
+  it("handles a spec with a .transform postprocessor and defaults", () => {
+    const x = parseCore(
+      {
+        FUN_LEVEL: "8",
+      },
+      {
+        FUN_LEVEL: {
+          schema: z
+            .number()
+            .int()
+            .transform((n) => String(n)),
+        },
+      }
+    );
+
+    // @ts-expect-error (2322) -- shouldn't be assignable to number
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fun: number = x.FUN_LEVEL;
+
+    expect(x.FUN_LEVEL).toBe("8");
   });
 });
