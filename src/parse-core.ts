@@ -11,30 +11,32 @@ import type { DeepReadonlyObject } from "./util";
 export type SimpleSchema<TOut> = z.ZodType<TOut, z.ZodTypeDef, any>;
 
 /**
- * For detailed schemas, we'd like to be able to constain the types of `default`
+ * For detailed specs, we'd like to be able to constain the types of `default`
  * and `devDefault` to the Zod input type, it's generic on both types.
  */
-export type DetailedSchema<TOut, TIn> = {
+export type DetailedSpec<TOut, TIn> = {
   schema: z.ZodType<TOut, z.ZodTypeDef, TIn>;
   description?: string;
 } & (
   | {
       /**
        * Default provided when the key is not defined in the environment and
-       * NODE_ENV === "production".
+       * `NODE_ENV === "production"`.
        */
       prodDefault?: TIn;
 
       /**
        * Default provided when the key is not defined in the environment and
-       * NODE_ENV !== "production".
+       * `NODE_ENV !== "production"`. (Alternately, usage of `devDefault` can be
+       * constrained to when `NODE_ENV === "development"` by passing the
+       * `strictDev` option to the parse function.)
        */
       devDefault?: TIn;
     }
   | {
       /**
        * Default provided when the key is not defined in the environment,
-       * regardless of whether NODE_ENV is "production" or not.
+       * regardless of whether `NODE_ENV` is "production" or not.
        */
       // ("default" would have been a more concise and consistent name here, but
       // because `ZodDefault` exists and has a `default` field, using the name
@@ -56,19 +58,20 @@ export type DetailedSchema<TOut, TIn> = {
 export type Schemas<TOutputs, TInputs extends TOutputs> = {
   [K in keyof TOutputs]:
     | SimpleSchema<TOutputs[K]>
-    | DetailedSchema<TOutputs[K], TInputs[K]>;
+    | DetailedSpec<TOutputs[K], TInputs[K]>;
 };
 
-export type AnySchema = SimpleSchema<any> | DetailedSchema<any, any>;
+export type AnySchemaOrSpec = SimpleSchema<any> | DetailedSpec<any, any>;
 
 export interface ParseOptions {
   reporter?: unknown;
 
   /**
-   * If true, `devDefault` values are only used for keys not defined in the
-   * environment if and only if `NODE_ENV` is `development`. If false,
+   * If `true`, `devDefault` values are only used for keys not defined in the
+   * environment if and only if `NODE_ENV === "development"`. If `false`,
    * `devDefault` values will be used for keys not defined in the environment if
-   * `NODE_ENV` is any value other than `production`. (Default: false)
+   * `NODE_ENV` is undefined, or is any value other than `production`. (Default:
+   * `false`)
    */
   strictDev?: boolean;
 }
@@ -87,26 +90,44 @@ export function parseCore<TOutputs, TInputs extends TOutputs>(
 
   const errors: [key: string, receivedValue: any, error: any][] = [];
 
+  // TODO: extract environment parsing to helper that also ingests strictDev
   const isProd = env["NODE_ENV"] === "production";
 
   for (const entry of Object.entries(schemas)) {
-    const [k, v] = entry as [keyof TOutputs, AnySchema];
+    const [key, schemaOrSpec] = entry as [keyof TOutputs, AnySchemaOrSpec];
 
-    let envValue = env[k as string];
-    if (envValue == null && !(v instanceof z.ZodAny)) {
-      if (isProd) {
-        if ("prodDefault" in v) {
-          envValue = v.prodDefault as any;
-        }
-      } else {
-        //
+    const envValue = env[key as string];
+
+    if (schemaOrSpec instanceof z.ZodType) {
+      try {
+        parsed[key] = getPreprocessedValidator(schemaOrSpec).parse(envValue);
+      } catch (e) {
+        errors.push([key as string, envValue, e]);
       }
-    }
+    } else if (envValue == null) {
+      try {
+        // FIXME: don't fall back to envValue at the end of the chain -- if
+        // there's no appropriate default to choose, pass it through the
+        // preprocessor instead of directly through the schema (since the schema
+        // might be a nullable, for example, which would expect the preprocessor
+        // to convert undefined to null)
+        const valueToParse =
+          "defaultValue" in schemaOrSpec
+            ? schemaOrSpec.defaultValue
+            : isProd && "prodDefault" in schemaOrSpec
+            ? schemaOrSpec.prodDefault
+            : "devDefault" in schemaOrSpec
+            ? schemaOrSpec.devDefault
+            : envValue;
 
-    try {
-      parsed[k] = getPreprocessedValidator(v).parse(envValue);
-    } catch (e) {
-      errors.push([k as string, envValue, e]);
+        parsed[key] = schemaOrSpec.schema.parse(valueToParse);
+      } catch (e) {
+        errors.push([key as string, envValue, e]);
+      }
+    } else {
+      parsed[key] = getPreprocessedValidator(schemaOrSpec.schema).parse(
+        envValue
+      );
     }
   }
 

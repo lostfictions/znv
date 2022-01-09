@@ -53,6 +53,11 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "rootDir": "src"
+    "rootDir": "src",
+    "globals": {
+      "ts-jest": {
+        "isolatedModules": true
+      }
+    }
   }
 }
