@@ -52,10 +52,14 @@ export type DetailedSpec<TOut, TIn> = {
     }
 );
 
-// FIXME: `TInputs extends TOutputs` breaks `.transform` postprocessing. an
-// alternative is `TInputs extends { [K in keyof TOutputs]: any }`, but that
-// instead breaks checking `default` and `devDefault`.
-export type Schemas<TOutputs, TInputs extends TOutputs> = {
+// FIXME: declaring `TInputs extends TOutputs` breaks `.transform`
+// postprocessing. so instead we declare
+// `TInputs extends { [K in keyof TOutputs]: unknown }`, but that doesn't allow
+// checking `default` and `devDefault`.
+export type Schemas<
+  TOutputs,
+  TInputs extends { [K in keyof TOutputs]: unknown }
+> = {
   [K in keyof TOutputs]:
     | SimpleSchema<TOutputs[K]>
     | DetailedSpec<TOutputs[K], TInputs[K]>;
@@ -81,7 +85,10 @@ export interface ParseOptions {
  * and returns the immutably-typed, parsed environment. Doesn't assume the
  * existence of `process.env` and doesn't parse any `.env` file.
  */
-export function parseCore<TOutputs, TInputs extends TOutputs>(
+export function parseCore<
+  TOutputs,
+  TInputs extends { [K in keyof TOutputs]: unknown }
+>(
   env: Record<string, string | undefined>,
   schemas: Schemas<TOutputs, TInputs>,
   { reporter, strictDev = false }: ParseOptions = {}

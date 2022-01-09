@@ -14,7 +14,10 @@ export interface ParseEnvOptions extends ParseOptions {
  * augmenting it by reading a `.env` file) and returns the immutably-typed,
  * parsed environment.
  */
-export function parseEnv<TOutputs, TInputs extends TOutputs>(
+export function parseEnv<
+  TOutputs,
+  TInputs extends { [K in keyof TOutputs]: unknown }
+>(
   schemas: Schemas<TOutputs, TInputs>,
   { dotenv = true, ...parseOptions }: ParseEnvOptions = {}
 ): DeepReadonlyObject<TOutputs> {

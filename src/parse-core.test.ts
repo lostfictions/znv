@@ -108,23 +108,41 @@ describe("parseCore", () => {
 
   it("handles a spec with a .transform postprocessor and defaults", () => {
     const x = parseCore(
-      {
-        FUN_LEVEL: "8",
-      },
+      {},
       {
         FUN_LEVEL: {
           schema: z
             .number()
             .int()
             .transform((n) => String(n)),
+          defaultValue: 8,
         },
       }
     );
 
+    const funLevel: string = x.FUN_LEVEL;
+
     // @ts-expect-error (2322) -- shouldn't be assignable to number
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const fun: number = x.FUN_LEVEL;
+    const funLevelAsNumber: number = x.FUN_LEVEL;
 
-    expect(x.FUN_LEVEL).toBe("8");
+    expect(funLevel).toBe("8");
+  });
+
+  it("throws on a .transform postprocessor with invalid default type", () => {
+    expect(() =>
+      parseCore(
+        {},
+        {
+          FUN_LEVEL: {
+            schema: z
+              .number()
+              .int()
+              .transform((n) => String(n)),
+            defaultValue: new Map(),
+          },
+        }
+      )
+    ).toThrow();
   });
 });
