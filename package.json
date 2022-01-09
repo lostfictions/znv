@@ -29,7 +29,7 @@
     "test": "run-p -cl test:*",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
-    "test:jest": "echo 'fixme! then change this to jest --colors'",
+    "test:jest": "jest --colors",
     "test:prettier": "prettier -l 'src/**/*'",
     "prettier": "prettier 'src/**/*' --write",
     "jest": "jest --colors --watch",
@@ -40,6 +40,7 @@
     "zod": "^3.11.6"
   },
   "devDependencies": {
+    "@types/jest": "^27.4.0",
     "@types/node": "^16.9.6",
     "eslint": "^8.6.0",
     "eslint-config-lostfictions": "^3.1.0",
@@ -52,11 +53,6 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "rootDir": "src",
-    "globals": {
-      "ts-jest": {
-        "isolatedModules": true
-      }
-    }
+    "rootDir": "src"
   }
 }

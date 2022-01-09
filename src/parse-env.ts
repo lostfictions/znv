@@ -14,10 +14,10 @@ export interface ParseEnvOptions extends ParseOptions {
  * augmenting it by reading a `.env` file) and returns the immutably-typed,
  * parsed environment.
  */
-export function parseEnv<T, U extends T>(
-  schemas: Schemas<T, U>,
+export function parseEnv<TOutputs, TInputs extends TOutputs>(
+  schemas: Schemas<TOutputs, TInputs>,
   { dotenv = true, ...parseOptions }: ParseEnvOptions = {}
-): DeepReadonlyObject<T> {
+): DeepReadonlyObject<TOutputs> {
   if (dotenv) {
     require("dotenv").config();
   }

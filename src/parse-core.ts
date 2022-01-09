@@ -12,11 +12,9 @@ export type SimpleSchema<TOut> = z.ZodType<TOut, z.ZodTypeDef, any>;
 
 /**
  * For detailed schemas, we'd like to be able to constain the types of `default`
- * and `devDefault` to the Zod input type. Unfortunately I can't figure out how
- * to actually make the inference work correctly on this one yet -- maybe for a
- * later version.
+ * and `devDefault` to the Zod input type, it's generic on both types.
  */
-export type DetailedSchema<TOut, TIn = unknown> = {
+export type DetailedSchema<TOut, TIn> = {
   schema: z.ZodType<TOut, z.ZodTypeDef, TIn>;
   description?: string;
 } & (
@@ -52,17 +50,20 @@ export type DetailedSchema<TOut, TIn = unknown> = {
     }
 );
 
-// FIXME: `U extends T` breaks `.transform` postprocessing. an alternative is `U
-// extends { [K in keyof T]: any }, but that instead breaks checking `default`
-// and `devDefault`.
-export type Schemas<T, U extends T> = {
-  [K in keyof T]: SimpleSchema<T[K]> | DetailedSchema<T[K], U[K]>;
+// FIXME: `TInputs extends TOutputs` breaks `.transform` postprocessing. an
+// alternative is `TInputs extends { [K in keyof TOutputs]: any }`, but that
+// instead breaks checking `default` and `devDefault`.
+export type Schemas<TOutputs, TInputs extends TOutputs> = {
+  [K in keyof TOutputs]:
+    | SimpleSchema<TOutputs[K]>
+    | DetailedSchema<TOutputs[K], TInputs[K]>;
 };
 
-export type AnySchema = SimpleSchema<any> | DetailedSchema<any>;
+export type AnySchema = SimpleSchema<any> | DetailedSchema<any, any>;
 
 export interface ParseOptions {
   reporter?: unknown;
+
   /**
    * If true, `devDefault` values are only used for keys not defined in the
    * environment if and only if `NODE_ENV` is `development`. If false,
@@ -77,21 +78,29 @@ export interface ParseOptions {
  * and returns the immutably-typed, parsed environment. Doesn't assume the
  * existence of `process.env` and doesn't parse any `.env` file.
  */
-export function parseCore<T, U extends T>(
+export function parseCore<TOutputs, TInputs extends TOutputs>(
   env: Record<string, string | undefined>,
-  schemas: Schemas<T, U>,
+  schemas: Schemas<TOutputs, TInputs>,
   { reporter, strictDev = false }: ParseOptions = {}
-): DeepReadonlyObject<T> {
-  const parsed: T = {} as any;
+): DeepReadonlyObject<TOutputs> {
+  const parsed: TOutputs = {} as any;
 
   const errors: [key: string, receivedValue: any, error: any][] = [];
 
+  const isProd = env["NODE_ENV"] === "production";
+
   for (const entry of Object.entries(schemas)) {
-    const [k, v] = entry as [keyof T, AnySchema];
+    const [k, v] = entry as [keyof TOutputs, AnySchema];
 
     let envValue = env[k as string];
-    if (envValue == null) {
-      // TODO: handle default/devDefault
+    if (envValue == null && !(v instanceof z.ZodAny)) {
+      if (isProd) {
+        if ("prodDefault" in v) {
+          envValue = v.prodDefault as any;
+        }
+      } else {
+        //
+      }
     }
 
     try {
@@ -109,5 +118,5 @@ export function parseCore<T, U extends T>(
     );
   }
 
-  return parsed as DeepReadonlyObject<T>;
+  return parsed as DeepReadonlyObject<TOutputs>;
 }
