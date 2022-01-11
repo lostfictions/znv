@@ -164,14 +164,10 @@ export function parseCore<T extends Schemas>(
 
     const envValue = env[key as string];
 
-    if (schemaOrSpec instanceof z.ZodType) {
-      try {
+    try {
+      if (schemaOrSpec instanceof z.ZodType) {
         parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(envValue);
-      } catch (e) {
-        errors.push([key as string, envValue, e]);
-      }
-    } else if (envValue == null) {
-      try {
+      } else if (envValue == null) {
         const [hasDefault, defaultValue] = resolveDefaultValueForSpec(
           isProd,
           isDev,
@@ -189,13 +185,13 @@ export function parseCore<T extends Schemas>(
             envValue
           );
         }
-      } catch (e) {
-        errors.push([key as string, envValue, e]);
+      } else {
+        parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
+          envValue
+        );
       }
-    } else {
-      parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
-        envValue
-      );
+    } catch (e) {
+      errors.push([key as string, envValue, e]);
     }
   }
 
@@ -210,9 +206,17 @@ export function parseCore<T extends Schemas>(
             )
               .split("\n")
               .map((line) => `    ${line}`)
-              .join("\n")}\n    (received \`${cyan(v)}\`)`
+              .join("\n")}\n    (received ${
+              typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
+            })${
+              schemas[k]?.description
+                ? `\n\n  Description of [${yellow(k)}]: ${
+                    schemas[k]!.description
+                  }`
+                : ""
+            }`
         )
-        .join("\n\n")}`
+        .join("\n\n")}\n`
     );
   }
 

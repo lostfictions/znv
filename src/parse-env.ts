@@ -11,7 +11,8 @@ import type { DeepReadonlyObject } from "./util";
 
 export interface ParseEnvOptions extends ParseOptions {
   /**
-   * Should the environment be augmented by reading in a `.env` file?
+   * Should the environment be augmented by reading in a `.env` file? (Default:
+   * `true`)
    */
   dotenv?: boolean;
 }
