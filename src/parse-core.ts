@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { yellow, red, cyan } from "colorette";
 
 import { getSchemaWithPreprocessor } from "./preprocessors";
 
@@ -200,8 +201,17 @@ export function parseCore<T extends Schemas>(
 
   if (errors.length > 0) {
     throw new Error(
-      `Errors found!\n${errors
-        .map(([k, v, e]) => `\t[${k}]:\n\t\t${e}\n\t\t(received ${v})`)
+      `${red("Errors found!")}\n${errors
+        .map(
+          ([k, v, e]) =>
+            `  [${yellow(k)}]:\n${(e instanceof Error
+              ? e.message
+              : JSON.stringify(e)
+            )
+              .split("\n")
+              .map((line) => `    ${line}`)
+              .join("\n")}\n    (received \`${cyan(v)}\`)`
+        )
         .join("\n\n")}`
     );
   }

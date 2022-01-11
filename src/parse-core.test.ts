@@ -63,6 +63,39 @@ describe("parseCore", () => {
     ]);
   });
 
+  it("handles an object", () => {
+    const animal = z.object({
+      sound: z.string(),
+      size: z.enum(["big", "medium", "small"]),
+    });
+
+    const [x] = parseCore(
+      {
+        ANIMALS:
+          '{ "dog": { "sound": "woof", "size": "big" }, "cat": { "sound": "meow", "size": "small" } }',
+      },
+      {
+        ANIMALS: z.object({
+          dog: animal,
+          cat: animal,
+        }),
+      }
+    );
+
+    expect(x).toStrictEqual({
+      ANIMALS: {
+        dog: {
+          sound: "woof",
+          size: "big",
+        },
+        cat: {
+          sound: "meow",
+          size: "small",
+        },
+      },
+    });
+  });
+
   it("validates and throws on invalid env values", () => {
     // TODO: use more specific throw matcher
     expect(() =>

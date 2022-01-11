@@ -36,6 +36,7 @@
     "prepublishOnly": "run-s -l test build"
   },
   "dependencies": {
+    "colorette": "^2.0.16",
     "dotenv": "^10.0.0",
     "zod": "^3.11.6"
   },
