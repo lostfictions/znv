@@ -53,7 +53,7 @@ export type DetailedSpec<
     }
   : never;
 
-export type Schemas = Record<string, DetailedSpec>;
+export type Schemas = Record<string, SimpleSchema | DetailedSpec>;
 
 type DetailedSpecKeys = keyof DetailedSpec;
 
@@ -68,22 +68,30 @@ type DetailedSpecKeys = keyof DetailedSpec;
 // this doesn't seem to work. The below strategy isn't totally ideal and doesn't
 // scale well, but hopefully it's good enough for now.
 export type RestrictSchemas<T extends Schemas> = {
-  [K in keyof T]: DetailedSpec<T[K]["schema"]> &
-    Omit<
-      Record<keyof T[K], never>,
-      // if this object doesn't define a `defaultValue`...
-      undefined extends T[K]["defaultValue"]
-        ? // ...all keys are allowed...
-          DetailedSpecKeys
-        : // ...otherwise all keys except `prodDefault` and `devDefault` are allowed.
-          Exclude<DetailedSpecKeys, "prodDefault" | "devDefault">
-    >;
+  [K in keyof T]: T[K] extends SimpleSchema
+    ? SimpleSchema
+    : T[K] extends DetailedSpec
+    ? DetailedSpec<T[K]["schema"]> &
+        Omit<
+          Record<keyof T[K], never>,
+          // if this object doesn't define a `defaultValue`...
+          undefined extends T[K]["defaultValue"]
+            ? // ...all fields (besides `defaultValue`) are allowed...
+              DetailedSpecKeys
+            : // ...otherwise, all fields except `prodDefault` and `devDefault` are allowed.
+              Exclude<DetailedSpecKeys, "prodDefault" | "devDefault">
+        >
+    : never;
 };
 
 export type ParsedSchema<T extends Schemas> = T extends any
   ? {
-      [K in keyof T]: T[K]["schema"] extends SimpleSchema<infer TOut>
+      [K in keyof T]: T[K] extends SimpleSchema<infer TOut>
         ? TOut
+        : T[K] extends DetailedSpec
+        ? T[K]["schema"] extends SimpleSchema<infer TOut>
+          ? TOut
+          : never
         : never;
     }
   : never;

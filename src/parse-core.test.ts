@@ -79,7 +79,7 @@ describe("parseCore", () => {
     ).toThrow();
   });
 
-  it("strips excess properties", () => {
+  it("doesn't pass through any env values not in the schema", () => {
     const [x] = parseCore(
       { HOST: "localhost", PORT: "5050" },
       { HOST: z.string() }
@@ -110,7 +110,7 @@ describe("parseCore", () => {
     });
   });
 
-  it("validates defaults and throws", () => {
+  it("validates defaults against the schema and throws", () => {
     // TODO: use more specific throw matcher
     expect(() =>
       parseCore(
@@ -137,7 +137,7 @@ describe("parseCore", () => {
         FUN_LEVEL: z
           .number()
           .int()
-          .transform((n) => String(n)),
+          .transform((n) => String(n + 10)),
       }
     );
 
@@ -145,7 +145,7 @@ describe("parseCore", () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const fun: number = x.FUN_LEVEL;
 
-    expect(x.FUN_LEVEL).toBe("8");
+    expect(x.FUN_LEVEL).toBe("18");
   });
 
   it("handles a spec with a .transform postprocessor and defaults", () => {
@@ -156,7 +156,7 @@ describe("parseCore", () => {
           schema: z
             .number()
             .int()
-            .transform((n) => String(n)),
+            .transform((n) => String(n + 10)),
           defaultValue: 8,
         },
       }
@@ -168,7 +168,7 @@ describe("parseCore", () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const funLevelAsNumber: number = x.FUN_LEVEL;
 
-    expect(funLevel).toBe("8");
+    expect(funLevel).toBe("18");
   });
 
   it("throws on a .transform postprocessor with invalid default type", () => {
