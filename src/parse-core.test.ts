@@ -4,7 +4,7 @@ import { parseCore } from "./parse-core";
 
 describe("parseCore", () => {
   it("handles a basic case", () => {
-    const x = parseCore(
+    const [x] = parseCore(
       {
         HOST: "localhost",
         PORT: "5050",
@@ -19,6 +19,48 @@ describe("parseCore", () => {
       HOST: "localhost",
       PORT: 5050,
     });
+  });
+
+  it("handles a basic case with defaults", () => {
+    const [x] = parseCore(
+      {
+        PORT: "5050",
+      },
+      {
+        HOST: z.string().default("localhost"),
+        PORT: z.number().int().nonnegative().lte(65535),
+      }
+    );
+
+    expect(x).toStrictEqual({
+      HOST: "localhost",
+      PORT: 5050,
+    });
+  });
+
+  it("parses NODE_ENV and returns resolved values", () => {
+    const x = parseCore(
+      {
+        NODE_ENV: "production",
+        HOST: "localhost",
+        PORT: "5050",
+      },
+      {
+        HOST: z.string(),
+        PORT: z.number().int().nonnegative().lte(65535),
+      }
+    );
+
+    expect(x).toStrictEqual([
+      {
+        HOST: "localhost",
+        PORT: 5050,
+      },
+      {
+        isDev: false,
+        isProd: true,
+      },
+    ]);
   });
 
   it("validates and throws on invalid env values", () => {
@@ -38,7 +80,7 @@ describe("parseCore", () => {
   });
 
   it("strips excess properties", () => {
-    const x = parseCore(
+    const [x] = parseCore(
       { HOST: "localhost", PORT: "5050" },
       { HOST: z.string() }
     );
@@ -49,7 +91,7 @@ describe("parseCore", () => {
   });
 
   it("handles a detailed spec with defaults", () => {
-    const x = parseCore(
+    const [x] = parseCore(
       {
         HOST: "localhost",
       },
@@ -87,7 +129,7 @@ describe("parseCore", () => {
   });
 
   it("handles a simple schema with a .transform postprocessor", () => {
-    const x = parseCore(
+    const [x] = parseCore(
       {
         FUN_LEVEL: "8",
       },
@@ -107,7 +149,7 @@ describe("parseCore", () => {
   });
 
   it("handles a spec with a .transform postprocessor and defaults", () => {
-    const x = parseCore(
+    const [x] = parseCore(
       {},
       {
         FUN_LEVEL: {
@@ -139,6 +181,7 @@ describe("parseCore", () => {
               .number()
               .int()
               .transform((n) => String(n)),
+            // @ts-expect-error (2322) -- should be number
             defaultValue: new Map(),
           },
         }

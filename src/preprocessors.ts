@@ -5,10 +5,10 @@ import { assertNever } from "./util";
 const { ZodFirstPartyTypeKind: TypeName } = z;
 
 /**
- * Given a Zod schema, returns a function that tries to convert a string to a
- * valid input type for the schema.
+ * Given a Zod schema, returns a function that tries to convert a string (or
+ * undefined!) to a valid input type for the schema.
  */
-export function getStringPreprocessorByZodType(
+export function getPreprocessorByZodType(
   schema: z.ZodFirstPartySchemaTypes
 ): (arg: string | undefined) => unknown {
   const def = schema._def;
@@ -58,17 +58,17 @@ export function getStringPreprocessorByZodType(
       };
 
     case TypeName.ZodEffects:
-      return getStringPreprocessorByZodType(def.schema);
+      return getPreprocessorByZodType(def.schema);
 
     case TypeName.ZodDefault:
       // eslint-disable-next-line unicorn/consistent-destructuring -- false positive
-      return getStringPreprocessorByZodType(def.innerType);
+      return getPreprocessorByZodType(def.innerType);
 
     case TypeName.ZodOptional: {
       const { innerType } = def;
       return (arg) => {
         if (arg == null) return undefined;
-        return getStringPreprocessorByZodType(innerType);
+        return getPreprocessorByZodType(innerType);
       };
     }
 
@@ -76,7 +76,7 @@ export function getStringPreprocessorByZodType(
       const { innerType } = def;
       return (arg) => {
         if (arg == null) return null;
-        return getStringPreprocessorByZodType(innerType);
+        return getPreprocessorByZodType(innerType);
       };
     }
 
@@ -94,15 +94,15 @@ export function getStringPreprocessorByZodType(
     case TypeName.ZodLiteral:
       switch (typeof def.value) {
         case "number":
-          return getStringPreprocessorByZodType({
+          return getPreprocessorByZodType({
             _def: { typeName: TypeName.ZodNumber },
           } as z.ZodFirstPartySchemaTypes);
         case "string":
-          return getStringPreprocessorByZodType({
+          return getPreprocessorByZodType({
             _def: { typeName: TypeName.ZodString },
           } as z.ZodFirstPartySchemaTypes);
         case "boolean":
-          return getStringPreprocessorByZodType({
+          return getPreprocessorByZodType({
             _def: { typeName: TypeName.ZodBoolean },
           } as z.ZodFirstPartySchemaTypes);
         default:
@@ -144,9 +144,9 @@ export function getStringPreprocessorByZodType(
  * Given a Zod schema, return the schema wrapped in a preprocessor that tries to
  * convert a string to the schema's input type.
  */
-export function getPreprocessedValidator(schema: z.ZodFirstPartySchemaTypes) {
+export function getSchemaWithPreprocessor(schema: z.ZodTypeAny) {
   return z.preprocess(
-    getStringPreprocessorByZodType(schema) as (arg: unknown) => unknown,
+    getPreprocessorByZodType(schema) as (arg: unknown) => unknown,
     schema
   );
 }

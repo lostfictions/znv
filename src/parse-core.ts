@@ -1,24 +1,31 @@
 import * as z from "zod";
 
-import { getPreprocessedValidator } from "./preprocessors";
+import { getSchemaWithPreprocessor } from "./preprocessors";
 
 import type { DeepReadonlyObject } from "./util";
 
-/**
- * For simple schemas we don't care about the Zod input type -- we just want the
- * output type for inferring the return type.
- */
-export type SimpleSchema<TOut> = z.ZodType<TOut, z.ZodTypeDef, any>;
+export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
+  TOut,
+  z.ZodTypeDef,
+  TIn
+>;
 
-/**
- * For detailed specs, we'd like to be able to constain the types of `default`
- * and `devDefault` to the Zod input type, it's generic on both types.
- */
-export type DetailedSpec<TOut, TIn> = {
-  schema: z.ZodType<TOut, z.ZodTypeDef, TIn>;
-  description?: string;
-} & (
-  | {
+export type DetailedSpec<
+  TSchema extends SimpleSchema = SimpleSchema<unknown, unknown>
+> = TSchema extends SimpleSchema<any, infer TIn>
+  ? {
+      /**
+       * The Zod schema that will be used to parse the passed environment value
+       * (or any provided default).
+       */
+      schema: TSchema;
+
+      /**
+       * A description of this env var that's provided as help text if the
+       * passed value fails validation, or is required but missing.
+       */
+      description?: string;
+
       /**
        * Default provided when the key is not defined in the environment and
        * `NODE_ENV === "production"`.
@@ -32,8 +39,7 @@ export type DetailedSpec<TOut, TIn> = {
        * `strictDev` option to the parse function.)
        */
       devDefault?: TIn;
-    }
-  | {
+
       /**
        * Default provided when the key is not defined in the environment,
        * regardless of whether `NODE_ENV` is "production" or not.
@@ -43,33 +49,46 @@ export type DetailedSpec<TOut, TIn> = {
       // `default` causes TS to give a confusing error on invalid values where
       // it additionally tries to infer our `DetailedSchema` as a `SimpleSchema`
       // of `ZodDefault` with missing fields.)
-      defaultValue: TIn;
-
-      // disjoint unions by default optionally allow all members anyway, so
-      // `never` is needed here to ensure these options are mutually exclusive.
-      prodDefault: never;
-      devDefault: never;
+      defaultValue?: TIn;
     }
-);
+  : never;
 
-// FIXME: declaring `TInputs extends TOutputs` breaks `.transform`
-// postprocessing. so instead we declare
-// `TInputs extends { [K in keyof TOutputs]: unknown }`, but that doesn't allow
-// checking `default` and `devDefault`.
-export type Schemas<
-  TOutputs,
-  TInputs extends { [K in keyof TOutputs]: unknown }
-> = {
-  [K in keyof TOutputs]:
-    | SimpleSchema<TOutputs[K]>
-    | DetailedSpec<TOutputs[K], TInputs[K]>;
+export type Schemas = Record<string, DetailedSpec>;
+
+type DetailedSpecKeys = keyof DetailedSpec;
+
+// There's some trickiness with the function parameter where in some
+// circumstances excess parameters are allowed. We'd also like to restrict
+// options, such that only either
+// { defaultValue? } or { devDefault?, prodDefault? } is passed in -- that is,
+// `defaultValue` can't be used alongside `prodDefault` or `devDefault`, though
+// all are optional. Normally in TypeScript we'd do this by typing the parameter
+// as an object of common properties intersected with a union of
+// mutually-exclusive options, but because of the complex inference we're doing,
+// this doesn't seem to work. The below strategy isn't totally ideal and doesn't
+// scale well, but hopefully it's good enough for now.
+export type RestrictSchemas<T extends Schemas> = {
+  [K in keyof T]: DetailedSpec<T[K]["schema"]> &
+    Omit<
+      Record<keyof T[K], never>,
+      // if this object doesn't define a `defaultValue`...
+      undefined extends T[K]["defaultValue"]
+        ? // ...all keys are allowed...
+          DetailedSpecKeys
+        : // ...otherwise all keys except `prodDefault` and `devDefault` are allowed.
+          Exclude<DetailedSpecKeys, "prodDefault" | "devDefault">
+    >;
 };
 
-export type AnySchemaOrSpec = SimpleSchema<any> | DetailedSpec<any, any>;
+export type ParsedSchema<T extends Schemas> = T extends any
+  ? {
+      [K in keyof T]: T[K]["schema"] extends SimpleSchema<infer TOut>
+        ? TOut
+        : never;
+    }
+  : never;
 
 export interface ParseOptions {
-  reporter?: unknown;
-
   /**
    * If `true`, `devDefault` values are only used for keys not defined in the
    * environment if and only if `NODE_ENV === "development"`. If `false`,
@@ -80,59 +99,92 @@ export interface ParseOptions {
   strictDev?: boolean;
 }
 
+export interface NodeEnvInfo {
+  readonly isProd: boolean;
+  readonly isDev: boolean;
+}
+
+export function resolveNodeEnv(
+  nodeEnv: string | undefined,
+  strictDev = false
+): NodeEnvInfo {
+  if (nodeEnv === "production") return { isProd: true, isDev: false };
+  if (nodeEnv === "development") return { isProd: false, isDev: true };
+  if (strictDev) return { isProd: false, isDev: false };
+  return { isProd: false, isDev: true };
+}
+
+/**
+ * Since there might be a provided default value of `null` or `undefined`, we
+ * return a tuple that also indicates whether we found a default.
+ */
+export function resolveDefaultValueForSpec(
+  isProd: boolean,
+  isDev: boolean,
+  spec: DetailedSpec
+): [hasDefault: boolean, defaultValue: unknown] {
+  if ("defaultValue" in spec) return [true, spec.defaultValue];
+  if (isProd && "prodDefault" in spec) return [true, spec.prodDefault];
+  if (isDev && "devDefault" in spec) return [true, spec.devDefault];
+  return [false, undefined];
+}
+
 /**
  * Parses the passed environment object using the provided map of Zod schemas
  * and returns the immutably-typed, parsed environment. Doesn't assume the
  * existence of `process.env` and doesn't parse any `.env` file.
  */
-export function parseCore<
-  TOutputs,
-  TInputs extends { [K in keyof TOutputs]: unknown }
->(
+export function parseCore<T extends Schemas>(
   env: Record<string, string | undefined>,
-  schemas: Schemas<TOutputs, TInputs>,
-  { reporter, strictDev = false }: ParseOptions = {}
-): DeepReadonlyObject<TOutputs> {
-  const parsed: TOutputs = {} as any;
+  schemas: T & RestrictSchemas<T>,
+  { strictDev = false }: ParseOptions = {}
+): [DeepReadonlyObject<ParsedSchema<T>>, NodeEnvInfo] {
+  const parsed: ParsedSchema<T> = {} as any;
 
   const errors: [key: string, receivedValue: any, error: any][] = [];
 
-  // TODO: extract environment parsing to helper that also ingests strictDev
-  const isProd = env["NODE_ENV"] === "production";
+  const resolvedNodeEnv = resolveNodeEnv(env["NODE_ENV"], strictDev);
+
+  const { isProd, isDev } = resolvedNodeEnv;
 
   for (const entry of Object.entries(schemas)) {
-    const [key, schemaOrSpec] = entry as [keyof TOutputs, AnySchemaOrSpec];
+    const [key, schemaOrSpec] = entry as [
+      keyof ParsedSchema<T>,
+      DetailedSpec<SimpleSchema>
+    ];
 
     const envValue = env[key as string];
 
     if (schemaOrSpec instanceof z.ZodType) {
       try {
-        parsed[key] = getPreprocessedValidator(schemaOrSpec).parse(envValue);
+        parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(envValue);
       } catch (e) {
         errors.push([key as string, envValue, e]);
       }
     } else if (envValue == null) {
       try {
-        // FIXME: don't fall back to envValue at the end of the chain -- if
-        // there's no appropriate default to choose, pass it through the
-        // preprocessor instead of directly through the schema (since the schema
-        // might be a nullable, for example, which would expect the preprocessor
-        // to convert undefined to null)
-        const valueToParse =
-          "defaultValue" in schemaOrSpec
-            ? schemaOrSpec.defaultValue
-            : isProd && "prodDefault" in schemaOrSpec
-            ? schemaOrSpec.prodDefault
-            : "devDefault" in schemaOrSpec
-            ? schemaOrSpec.devDefault
-            : envValue;
+        const [hasDefault, defaultValue] = resolveDefaultValueForSpec(
+          isProd,
+          isDev,
+          schemaOrSpec
+        );
 
-        parsed[key] = schemaOrSpec.schema.parse(valueToParse);
+        if (hasDefault) {
+          parsed[key] = schemaOrSpec.schema.parse(defaultValue);
+        } else {
+          // if there's no default, pass our envValue through the
+          // schema-with-preprocessor (it's an edge case, but our schema might
+          // accept `null`, and the preprocessor will convert `undefined` to
+          // `null` for us).
+          parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
+            envValue
+          );
+        }
       } catch (e) {
         errors.push([key as string, envValue, e]);
       }
     } else {
-      parsed[key] = getPreprocessedValidator(schemaOrSpec.schema).parse(
+      parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
         envValue
       );
     }
@@ -146,5 +198,5 @@ export function parseCore<
     );
   }
 
-  return parsed as DeepReadonlyObject<TOutputs>;
+  return [parsed as DeepReadonlyObject<ParsedSchema<T>>, resolvedNodeEnv];
 }
