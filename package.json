@@ -1,6 +1,6 @@
 {
   "name": "znv",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Parse your environment with Zod schemas",
   "keywords": [
     "env",
