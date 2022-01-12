@@ -21,31 +21,32 @@ export function getPreprocessorByZodType(
       return (arg) => arg;
 
     case TypeName.ZodNumber:
-      return (arg) =>
-        z
-          .string()
-          .regex(/^\d+(\.\d+)?$/, {
-            message: "Value doesn't appear to be a number!",
-          })
-          .transform(Number)
-          .parse(arg);
+      return (arg) => {
+        if (/^\d+(\.\d+)?$/.test(arg!)) return Number(arg);
+        return arg;
+      };
 
     case TypeName.ZodBigInt:
-      return (arg) =>
-        z
-          .string()
-          .regex(/^\d+$/, { message: "Value doesn't appear to be a bigint!" })
-          .transform(BigInt)
-          .parse(arg);
+      return (arg) => {
+        if (/^\d+$/.test(arg!)) return BigInt(arg!);
+        return arg;
+      };
 
     case TypeName.ZodBoolean:
-      return (arg) =>
-        z
-          .union([
-            z.enum(["true", "yes", "1"]).transform(() => true),
-            z.enum(["false", "no", "0"]).transform(() => false),
-          ])
-          .parse(arg);
+      return (arg) => {
+        switch (arg) {
+          case "true":
+          case "yes":
+          case "1":
+            return true;
+          case "false":
+          case "no":
+          case "0":
+            return false;
+          default:
+            return arg;
+        }
+      };
 
     case TypeName.ZodArray:
     case TypeName.ZodObject:

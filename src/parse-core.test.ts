@@ -221,4 +221,35 @@ describe("parseCore", () => {
       )
     ).toThrow();
   });
+
+  const schemasWithDefaults: [z.ZodTypeAny, any][] = [
+    [z.number(), 5],
+    [z.object({ a: z.string(), b: z.bigint() }), { a: "ok", b: 4n }],
+  ];
+
+  it("handles spec-provided defaults for common schema types", () => {
+    expect.hasAssertions();
+
+    for (const [schema, defaultValue] of schemasWithDefaults) {
+      const [{ SOME_SCHEMA }] = parseCore(
+        {},
+        { SOME_SCHEMA: { schema, defaultValue } as any }
+      );
+
+      expect(SOME_SCHEMA).toStrictEqual(defaultValue);
+    }
+  });
+
+  it("handles validator-provided defaults for common schema types", () => {
+    expect.hasAssertions();
+
+    for (const [schema, defaultValue] of schemasWithDefaults) {
+      const [{ SOME_SCHEMA }] = parseCore(
+        {},
+        { SOME_SCHEMA: schema.default(defaultValue) }
+      );
+
+      expect(SOME_SCHEMA).toStrictEqual(defaultValue);
+    }
+  });
 });
