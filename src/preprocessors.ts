@@ -52,9 +52,13 @@ export function getPreprocessorByZodType(
     case TypeName.ZodObject:
     case TypeName.ZodTuple:
     case TypeName.ZodRecord:
+    case TypeName.ZodIntersection:
       return (arg) => {
         // neither `undefined` nor the empty string are valid json.
         if (!arg) return arg;
+        // the one circumstance when a preprocessor should be able to throw is
+        // if the json is invalid -- this way the error message will be more
+        // informative (rather than just "expected x, got string")
         return JSON.parse(arg);
       };
 
@@ -118,7 +122,6 @@ export function getPreprocessorByZodType(
       };
 
     case TypeName.ZodUnion:
-    case TypeName.ZodIntersection:
     case TypeName.ZodNativeEnum:
       throw new Error(
         `Zod type not yet supported: "${typeName}" (PRs welcome)`

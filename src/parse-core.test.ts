@@ -96,6 +96,33 @@ describe("parseCore", () => {
     });
   });
 
+  it("handles an intersection type", () => {
+    const animal = z.object({
+      sound: z.string(),
+      size: z.enum(["big", "medium", "small"]),
+    });
+
+    const thingWithSmell = z.object({
+      smell: z.enum(["bad", "very bad"]),
+    });
+
+    const [x] = parseCore(
+      { pet: '{ "sound": "woof", "size": "big", "smell": "bad" }' },
+      { pet: z.intersection(animal, thingWithSmell) }
+    );
+
+    expect(x).toStrictEqual({
+      pet: { sound: "woof", size: "big", smell: "bad" },
+    });
+
+    expect(() =>
+      parseCore(
+        { pet: '{ "sound": "woof", "size": "big" }' },
+        { pet: z.intersection(animal, thingWithSmell) }
+      )
+    ).toThrow();
+  });
+
   it("validates and throws on invalid env values", () => {
     // TODO: use more specific throw matcher
     expect(() =>
