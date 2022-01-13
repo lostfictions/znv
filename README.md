@@ -10,8 +10,8 @@ Pass in a schema and it will be checked against your `process.env` (or any other
 object you provide shaped like `Record<string, string | undefined>`). Get back a
 validated, type-safe, read-only environment object that you can export for use
 in your app. You can optionally provide defaults (which can be matched against
-`NODE_ENV` values like `production` or `development`) and help strings for when
-var as missing.
+`NODE_ENV` values like `production` or `development`) and help strings that will
+be shown when an env var is missing.
 
 ```bash
 npm i znv zod
@@ -95,8 +95,9 @@ export const { HOST, PORT } = parseEnv(process.env, {
   // doing something wrong.
   EDITORS: z.array(z.string().nonempty()),
 
-  // optional values are also supported and provide a way to still benefit from
-  // the validation and static typing provided by zod.
+  // optional values are also supported and provide a way to benefit from the
+  // validation and static typing provided by zod even if you don't want to
+  // error out on a missing value.
   POST_LIMIT: z.number().optional(),
 });
 ```
