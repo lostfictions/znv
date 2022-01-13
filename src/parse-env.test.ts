@@ -223,6 +223,11 @@ describe("parseCore", () => {
     });
   });
 
+  it("fails a string schema when value is missing", () => {
+    // a missing value should never be coerced to an empty string, for example
+    expect(() => parseEnv({}, { dogs: z.string() })).toThrow();
+  });
+
   it("handles an object", () => {
     const animal = z.object({
       sound: z.string(),

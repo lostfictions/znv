@@ -4,13 +4,14 @@
 <img src="https://img.shields.io/npm/v/znv.svg?logo=npm" alt="NPM version" />
 </a>
 
-Parse your environment with [Zod](https://github.com/colinhacks/zod). Pass in a
-schema and it will be checked against your `process.env` (or any other object
-you provide shaped like `Record<string, string | undefined>`). Get back a
-validated, read-only environment object that you can export for use in your app.
-You can optionally provide defaults (which can be matched against `NODE_ENV`
-values like `production` or `development`) and even transform the validated
-result.
+Parse your environment with [Zod](https://github.com/colinhacks/zod).
+
+Pass in a schema and it will be checked against your `process.env` (or any other
+object you provide shaped like `Record<string, string | undefined>`). Get back a
+validated, type-safe, read-only environment object that you can export for use
+in your app. You can optionally provide defaults (which can be matched against
+`NODE_ENV` values like `production` or `development`) and help strings for when
+var as missing.
 
 ```bash
 npm i znv zod
@@ -60,6 +61,7 @@ export const { HOST, PORT } = parseEnv(process.env, {
     defaults: {
       production: "my-cool-horse.website",
       staging: "cool-horse-staging.cloud-provider.zone",
+
       // "_" is a special token that can be used in `defaults`. its value will
       // be used if `NODE_ENV` doesn't match any other provided key.
       // use this with care -- it's not rare to forget to set `NODE_ENV` in
@@ -94,9 +96,21 @@ export const { HOST, PORT } = parseEnv(process.env, {
   EDITORS: z.array(z.string().nonempty()),
 
   // optional values are also supported and provide a way to still benefit from
-  // the validation and static typing provided by zod
+  // the validation and static typing provided by zod.
   POST_LIMIT: z.number().optional(),
 });
+```
+
+```ts
+// if a env var is missing but required and no default exists, or if a var fails
+// validation, `parseEnv` will throw.
+export const { HOST, PORT } = parseEnv(
+  { PORT: "20" },
+  {
+    HOST: z.string(),
+    PORT: port().default(8080),
+  }
+);
 ```
 
 It's recommended to define a single file (you can call it something like
