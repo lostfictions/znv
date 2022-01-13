@@ -1,10 +1,10 @@
 import * as z from "zod";
 
-import { inferSchema, parseCore } from "./parse-core";
+import { parseEnv } from "./parse-env";
 
 describe("parseCore", () => {
   it("handles a basic case", () => {
-    const x = parseCore(
+    const x = parseEnv(
       {
         HOST: "localhost",
         PORT: "5050",
@@ -22,7 +22,7 @@ describe("parseCore", () => {
   });
 
   it("handles a basic case with a zod default", () => {
-    const x = parseCore(
+    const x = parseEnv(
       {
         PORT: "5050",
       },
@@ -40,7 +40,7 @@ describe("parseCore", () => {
 
   it("returns the correct default based on NODE_ENV", () => {
     expect(
-      parseCore(
+      parseEnv(
         {
           NODE_ENV: "production",
           HOST: "envhost",
@@ -62,7 +62,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {
           NODE_ENV: "production",
         },
@@ -82,7 +82,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {
           NODE_ENV: "production",
           HOST: "envhost",
@@ -103,7 +103,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {
           NODE_ENV: "production",
         },
@@ -125,7 +125,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {
           NODE_ENV: "production",
           HOST: "envhost",
@@ -148,7 +148,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {},
         {
           HOST: {
@@ -168,7 +168,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {},
         {
           HOST: {
@@ -188,7 +188,7 @@ describe("parseCore", () => {
     });
 
     expect(
-      parseCore(
+      parseEnv(
         {},
         {
           HOST: {
@@ -213,7 +213,7 @@ describe("parseCore", () => {
       size: z.enum(["big", "medium", "small"]),
     });
 
-    const x = parseCore(
+    const x = parseEnv(
       {
         ANIMALS:
           '{ "dog": { "sound": "woof", "size": "big" }, "cat": { "sound": "meow", "size": "small" } }',
@@ -250,7 +250,7 @@ describe("parseCore", () => {
       smell: z.enum(["bad", "very bad"]),
     });
 
-    const x = parseCore(
+    const x = parseEnv(
       { pet: '{ "sound": "woof", "size": "big", "smell": "bad" }' },
       { pet: z.intersection(animal, thingWithSmell) }
     );
@@ -260,7 +260,7 @@ describe("parseCore", () => {
     });
 
     expect(() =>
-      parseCore(
+      parseEnv(
         { pet: '{ "sound": "woof", "size": "big" }' },
         { pet: z.intersection(animal, thingWithSmell) }
       )
@@ -270,7 +270,7 @@ describe("parseCore", () => {
   it("validates and throws on invalid env values", () => {
     // TODO: use more specific throw matcher
     expect(() =>
-      parseCore(
+      parseEnv(
         {
           HOST: "localhost",
           PORT: "50505050",
@@ -284,7 +284,7 @@ describe("parseCore", () => {
   });
 
   it("doesn't pass through any env values not in the schema", () => {
-    const x = parseCore(
+    const x = parseEnv(
       { HOST: "localhost", PORT: "5050" },
       { HOST: z.string() }
     );
@@ -295,7 +295,7 @@ describe("parseCore", () => {
   });
 
   it("handles a detailed spec with defaults", () => {
-    const x = parseCore(
+    const x = parseEnv(
       {
         HOST: "localhost",
       },
@@ -317,7 +317,7 @@ describe("parseCore", () => {
   it("validates defaults against the schema and throws", () => {
     // TODO: use more specific throw matcher
     expect(() =>
-      parseCore(
+      parseEnv(
         {
           HOST: "localhost",
         },
@@ -333,7 +333,7 @@ describe("parseCore", () => {
   });
 
   it("handles a simple schema with a .transform postprocessor", () => {
-    const x = parseCore(
+    const x = parseEnv(
       {
         FUN_LEVEL: "8",
       },
@@ -353,7 +353,7 @@ describe("parseCore", () => {
   });
 
   it("handles a spec with a .transform postprocessor and defaults", () => {
-    const x = parseCore(
+    const x = parseEnv(
       {},
       {
         FUN_LEVEL: {
@@ -377,7 +377,7 @@ describe("parseCore", () => {
 
   it("throws on a .transform postprocessor with invalid default type", () => {
     expect(() =>
-      parseCore(
+      parseEnv(
         {},
         {
           FUN_LEVEL: {
@@ -404,7 +404,7 @@ describe("parseCore", () => {
     expect.hasAssertions();
 
     for (const [schema, defaultValue] of schemasWithDefaults) {
-      const { SOME_SCHEMA } = parseCore(
+      const { SOME_SCHEMA } = parseEnv(
         {},
         { SOME_SCHEMA: { schema, defaults: { _: defaultValue } } as any }
       );
@@ -417,7 +417,7 @@ describe("parseCore", () => {
     expect.hasAssertions();
 
     for (const [schema, defaultValue] of schemasWithDefaults) {
-      const { SOME_SCHEMA } = parseCore(
+      const { SOME_SCHEMA } = parseEnv(
         {},
         { SOME_SCHEMA: schema.default(defaultValue) }
       );

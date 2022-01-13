@@ -102,10 +102,9 @@ export function inferSchema<T extends Schemas>(
 
 /**
  * Parses the passed environment object using the provided map of Zod schemas
- * and returns the immutably-typed, parsed environment. Doesn't assume the
- * existence of `process.env` and doesn't parse any `.env` file.
+ * and returns the immutably-typed, parsed environment..
  */
-export function parseCore<T extends Schemas>(
+export function parseEnv<T extends Schemas>(
   env: Record<string, string | undefined>,
   schemas: T & RestrictSchemas<T>
 ): DeepReadonlyObject<ParsedSchema<T>> {
