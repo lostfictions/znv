@@ -386,8 +386,10 @@ describe("parseCore", () => {
               .int()
               .transform((n) => String(n)),
             // @ts-expect-error (2322) -- should be number
-            defaultValue: new Map(),
-            // @ts-expect-error -- excess properties should be checked
+            defaults: {
+              _: new Map(),
+            },
+            // @ts-expect-error (2322) -- excess properties should be checked
             nonsense: "oops",
           },
         }
