@@ -1,10 +1,10 @@
 import * as z from "zod";
 
-import { parseCore } from "./parse-core";
+import { inferSchema, parseCore } from "./parse-core";
 
 describe("parseCore", () => {
   it("handles a basic case", () => {
-    const [x] = parseCore(
+    const x = parseCore(
       {
         HOST: "localhost",
         PORT: "5050",
@@ -21,8 +21,8 @@ describe("parseCore", () => {
     });
   });
 
-  it("handles a basic case with defaults", () => {
-    const [x] = parseCore(
+  it("handles a basic case with a zod default", () => {
+    const x = parseCore(
       {
         PORT: "5050",
       },
@@ -38,29 +38,173 @@ describe("parseCore", () => {
     });
   });
 
-  it("parses NODE_ENV and returns resolved values", () => {
-    const x = parseCore(
-      {
-        NODE_ENV: "production",
-        HOST: "localhost",
-        PORT: "5050",
-      },
-      {
-        HOST: z.string(),
-        PORT: z.number().int().nonnegative().lte(65535),
-      }
-    );
+  it("returns the correct default based on NODE_ENV", () => {
+    expect(
+      parseCore(
+        {
+          NODE_ENV: "production",
+          HOST: "envhost",
+          PORT: "5050",
+        },
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              production: "prodhost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "envhost",
+      PORT: 5050,
+    });
 
-    expect(x).toStrictEqual([
-      {
-        HOST: "localhost",
-        PORT: 5050,
-      },
-      {
-        isDev: false,
-        isProd: true,
-      },
-    ]);
+    expect(
+      parseCore(
+        {
+          NODE_ENV: "production",
+        },
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              production: "prodhost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "prodhost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {
+          NODE_ENV: "production",
+          HOST: "envhost",
+        },
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              development: "devhost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "envhost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {
+          NODE_ENV: "production",
+        },
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              production: "prodhost",
+              development: "devhost",
+              _: "defaulthost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "prodhost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {
+          NODE_ENV: "production",
+          HOST: "envhost",
+        },
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              production: "prodhost",
+              development: "devhost",
+              _: "defaulthost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "envhost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {},
+        {
+          HOST: {
+            schema: z.string(),
+            defaults: {
+              production: "prodhost",
+              development: "devhost",
+              _: "defaulthost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "defaulthost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {},
+        {
+          HOST: {
+            schema: z.string().default("zoddefaulthost"),
+            defaults: {
+              production: "prodhost",
+              development: "devhost",
+              _: "defaulthost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "defaulthost",
+      PORT: 80,
+    });
+
+    expect(
+      parseCore(
+        {},
+        {
+          HOST: {
+            schema: z.string().default("zoddefaulthost"),
+            defaults: {
+              production: "prodhost",
+              development: "devhost",
+            },
+          },
+          PORT: z.number().int().nonnegative().lte(65535).default(80),
+        }
+      )
+    ).toStrictEqual({
+      HOST: "zoddefaulthost",
+      PORT: 80,
+    });
   });
 
   it("handles an object", () => {
@@ -69,7 +213,7 @@ describe("parseCore", () => {
       size: z.enum(["big", "medium", "small"]),
     });
 
-    const [x] = parseCore(
+    const x = parseCore(
       {
         ANIMALS:
           '{ "dog": { "sound": "woof", "size": "big" }, "cat": { "sound": "meow", "size": "small" } }',
@@ -106,7 +250,7 @@ describe("parseCore", () => {
       smell: z.enum(["bad", "very bad"]),
     });
 
-    const [x] = parseCore(
+    const x = parseCore(
       { pet: '{ "sound": "woof", "size": "big", "smell": "bad" }' },
       { pet: z.intersection(animal, thingWithSmell) }
     );
@@ -140,7 +284,7 @@ describe("parseCore", () => {
   });
 
   it("doesn't pass through any env values not in the schema", () => {
-    const [x] = parseCore(
+    const x = parseCore(
       { HOST: "localhost", PORT: "5050" },
       { HOST: z.string() }
     );
@@ -151,7 +295,7 @@ describe("parseCore", () => {
   });
 
   it("handles a detailed spec with defaults", () => {
-    const [x] = parseCore(
+    const x = parseCore(
       {
         HOST: "localhost",
       },
@@ -159,7 +303,7 @@ describe("parseCore", () => {
         HOST: z.string(),
         PORT: {
           schema: z.number().int().nonnegative().lte(65535),
-          defaultValue: 4040,
+          defaults: { _: 4040 },
         },
       }
     );
@@ -181,7 +325,7 @@ describe("parseCore", () => {
           HOST: z.string(),
           PORT: {
             schema: z.number().int().nonnegative().lte(65535),
-            defaultValue: 70000,
+            defaults: { _: 70000 },
           },
         }
       )
@@ -189,7 +333,7 @@ describe("parseCore", () => {
   });
 
   it("handles a simple schema with a .transform postprocessor", () => {
-    const [x] = parseCore(
+    const x = parseCore(
       {
         FUN_LEVEL: "8",
       },
@@ -209,7 +353,7 @@ describe("parseCore", () => {
   });
 
   it("handles a spec with a .transform postprocessor and defaults", () => {
-    const [x] = parseCore(
+    const x = parseCore(
       {},
       {
         FUN_LEVEL: {
@@ -217,7 +361,7 @@ describe("parseCore", () => {
             .number()
             .int()
             .transform((n) => String(n + 10)),
-          defaultValue: 8,
+          defaults: { _: 8 },
         },
       }
     );
@@ -243,6 +387,8 @@ describe("parseCore", () => {
               .transform((n) => String(n)),
             // @ts-expect-error (2322) -- should be number
             defaultValue: new Map(),
+            // @ts-expect-error -- excess properties should be checked
+            nonsense: "oops",
           },
         }
       )
@@ -258,9 +404,9 @@ describe("parseCore", () => {
     expect.hasAssertions();
 
     for (const [schema, defaultValue] of schemasWithDefaults) {
-      const [{ SOME_SCHEMA }] = parseCore(
+      const { SOME_SCHEMA } = parseCore(
         {},
-        { SOME_SCHEMA: { schema, defaultValue } as any }
+        { SOME_SCHEMA: { schema, defaults: { _: defaultValue } } as any }
       );
 
       expect(SOME_SCHEMA).toStrictEqual(defaultValue);
@@ -271,7 +417,7 @@ describe("parseCore", () => {
     expect.hasAssertions();
 
     for (const [schema, defaultValue] of schemasWithDefaults) {
-      const [{ SOME_SCHEMA }] = parseCore(
+      const { SOME_SCHEMA } = parseCore(
         {},
         { SOME_SCHEMA: schema.default(defaultValue) }
       );

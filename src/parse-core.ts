@@ -28,29 +28,19 @@ export type DetailedSpec<
       description?: string;
 
       /**
-       * Default provided when the key is not defined in the environment and
-       * `NODE_ENV === "production"`.
+       * An object that maps `NODE_ENV` values to default values to pass to the
+       * schema for this var when the var isn't defined in the environment. For
+       * example, you could specify `{ production: "my.cool.website",
+       * development: "localhost:9021" }` to use a local hostname in
+       * development.
+       *
+       * A special key for this object is `_`, which means "the default when
+       * `NODE_ENV` isn't defined."
+       *
+       * You can also use `.default()` in a Zod schema to provide a default (for
+       * example, `z.number().gte(20).default(50)`).
        */
-      prodDefault?: TIn;
-
-      /**
-       * Default provided when the key is not defined in the environment and
-       * `NODE_ENV !== "production"`. (Alternately, usage of `devDefault` can be
-       * constrained to when `NODE_ENV === "development"` by passing the
-       * `strictDev` option to the parse function.)
-       */
-      devDefault?: TIn;
-
-      /**
-       * Default provided when the key is not defined in the environment,
-       * regardless of whether `NODE_ENV` is "production" or not.
-       */
-      // ("default" would have been a more concise and consistent name here, but
-      // because `ZodDefault` exists and has a `default` field, using the name
-      // `default` causes TS to give a confusing error on invalid values where
-      // it additionally tries to infer our `DetailedSchema` as a `SimpleSchema`
-      // of `ZodDefault` with missing fields.)
-      defaultValue?: TIn;
+      defaults?: Record<string, TIn>;
     }
   : never;
 
@@ -59,29 +49,14 @@ export type Schemas = Record<string, SimpleSchema | DetailedSpec>;
 type DetailedSpecKeys = keyof DetailedSpec;
 
 // There's some trickiness with the function parameter where in some
-// circumstances excess parameters are allowed. We'd also like to restrict
-// options, such that only either
-// { defaultValue? } or { devDefault?, prodDefault? } is passed in -- that is,
-// `defaultValue` can't be used alongside `prodDefault` or `devDefault`, though
-// all are optional. Normally in TypeScript we'd do this by typing the parameter
-// as an object of common properties intersected with a union of
-// mutually-exclusive options, but because of the complex inference we're doing,
-// this doesn't seem to work. The below strategy isn't totally ideal and doesn't
-// scale well, but hopefully it's good enough for now.
+// circumstances excess parameters are allowed, and this strange-looking type
+// fixes it.
 export type RestrictSchemas<T extends Schemas> = {
   [K in keyof T]: T[K] extends SimpleSchema
     ? SimpleSchema
     : T[K] extends DetailedSpec
     ? DetailedSpec<T[K]["schema"]> &
-        Omit<
-          Record<keyof T[K], never>,
-          // if this object doesn't define a `defaultValue`...
-          undefined extends T[K]["defaultValue"]
-            ? // ...all fields (besides `defaultValue`) are allowed...
-              DetailedSpecKeys
-            : // ...otherwise, all fields except `prodDefault` and `devDefault` are allowed.
-              Exclude<DetailedSpecKeys, "prodDefault" | "devDefault">
-        >
+        Omit<Record<keyof T[K], never>, DetailedSpecKeys>
     : never;
 };
 
@@ -97,45 +72,32 @@ export type ParsedSchema<T extends Schemas> = T extends any
     }
   : never;
 
-export interface ParseOptions {
-  /**
-   * If `true`, `devDefault` values are only used for keys not defined in the
-   * environment if and only if `NODE_ENV === "development"`. If `false`,
-   * `devDefault` values will be used for keys not defined in the environment if
-   * `NODE_ENV` is undefined, or is any value other than `production`. (Default:
-   * `false`)
-   */
-  strictDev?: boolean;
-}
-
-export interface NodeEnvInfo {
-  readonly isProd: boolean;
-  readonly isDev: boolean;
-}
-
-export function resolveNodeEnv(
-  nodeEnv: string | undefined,
-  strictDev = false
-): NodeEnvInfo {
-  if (nodeEnv === "production") return { isProd: true, isDev: false };
-  if (nodeEnv === "development") return { isProd: false, isDev: true };
-  if (strictDev) return { isProd: false, isDev: false };
-  return { isProd: false, isDev: true };
-}
-
 /**
  * Since there might be a provided default value of `null` or `undefined`, we
  * return a tuple that also indicates whether we found a default.
  */
-export function resolveDefaultValueForSpec(
-  isProd: boolean,
-  isDev: boolean,
-  spec: DetailedSpec
-): [hasDefault: boolean, defaultValue: unknown] {
-  if ("defaultValue" in spec) return [true, spec.defaultValue];
-  if (isProd && "prodDefault" in spec) return [true, spec.prodDefault];
-  if (isDev && "devDefault" in spec) return [true, spec.devDefault];
+export function resolveDefaultValueForSpec<TIn = unknown>(
+  defaults: Record<string, TIn> | undefined,
+  nodeEnv: string | undefined
+): [hasDefault: boolean, defaultValue: TIn | undefined] {
+  if (defaults) {
+    if (nodeEnv == null) {
+      if ("_" in defaults) return [true, defaults["_"]];
+    } else if (Object.prototype.hasOwnProperty.call(defaults, nodeEnv)) {
+      return [true, defaults[nodeEnv]];
+    }
+  }
   return [false, undefined];
+}
+
+/**
+ * Mostly an internal convenience function for testing. Returns the input
+ * parameter unchanged, with validation of the `defaults` field applied.
+ */
+export function inferSchema<T extends Schemas>(
+  schemas: T & RestrictSchemas<T>
+): T & RestrictSchemas<T> {
+  return schemas;
 }
 
 /**
@@ -145,33 +107,22 @@ export function resolveDefaultValueForSpec(
  */
 export function parseCore<T extends Schemas>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>,
-  { strictDev = false }: ParseOptions = {}
-): [DeepReadonlyObject<ParsedSchema<T>>, NodeEnvInfo] {
-  const parsed: ParsedSchema<T> = {} as any;
+  schemas: T & RestrictSchemas<T>
+): DeepReadonlyObject<ParsedSchema<T>> {
+  const parsed: Record<string, unknown> = {} as any;
 
   const errors: [key: string, receivedValue: any, error: any][] = [];
 
-  const resolvedNodeEnv = resolveNodeEnv(env["NODE_ENV"], strictDev);
-
-  const { isProd, isDev } = resolvedNodeEnv;
-
-  for (const entry of Object.entries(schemas)) {
-    const [key, schemaOrSpec] = entry as [
-      keyof ParsedSchema<T>,
-      DetailedSpec<SimpleSchema>
-    ];
-
-    const envValue = env[key as string];
+  for (const [key, schemaOrSpec] of Object.entries(schemas)) {
+    const envValue = env[key];
 
     try {
       if (schemaOrSpec instanceof z.ZodType) {
         parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(envValue);
       } else if (envValue == null) {
         const [hasDefault, defaultValue] = resolveDefaultValueForSpec(
-          isProd,
-          isDev,
-          schemaOrSpec
+          schemaOrSpec.defaults,
+          env["NODE_ENV"]
         );
 
         if (hasDefault) {
@@ -191,7 +142,7 @@ export function parseCore<T extends Schemas>(
         );
       }
     } catch (e) {
-      errors.push([key as string, envValue, e]);
+      errors.push([key, envValue, e]);
     }
   }
 
@@ -220,5 +171,5 @@ export function parseCore<T extends Schemas>(
     );
   }
 
-  return [parsed as DeepReadonlyObject<ParsedSchema<T>>, resolvedNodeEnv];
+  return parsed as DeepReadonlyObject<ParsedSchema<T>>;
 }
