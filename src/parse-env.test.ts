@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { parseEnv } from "./parse-env";
+import { port } from "./extra-schemas";
 
 describe("parseCore", () => {
   it("handles a basic case", () => {
@@ -11,7 +12,7 @@ describe("parseCore", () => {
       },
       {
         HOST: z.string(),
-        PORT: z.number().int().nonnegative().lte(65535),
+        PORT: port(),
       }
     );
 
@@ -28,7 +29,7 @@ describe("parseCore", () => {
       },
       {
         HOST: z.string().default("localhost"),
-        PORT: z.number().int().nonnegative().lte(65535),
+        PORT: port(),
       }
     );
 
@@ -53,7 +54,7 @@ describe("parseCore", () => {
               production: "prodhost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -73,7 +74,7 @@ describe("parseCore", () => {
               production: "prodhost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -94,7 +95,7 @@ describe("parseCore", () => {
               development: "devhost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -116,7 +117,7 @@ describe("parseCore", () => {
               _: "defaulthost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -139,7 +140,7 @@ describe("parseCore", () => {
               _: "defaulthost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -159,7 +160,7 @@ describe("parseCore", () => {
               _: "defaulthost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -179,7 +180,7 @@ describe("parseCore", () => {
               _: "defaulthost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -198,7 +199,7 @@ describe("parseCore", () => {
               development: "devhost",
             },
           },
-          PORT: z.number().int().nonnegative().lte(65535).default(80),
+          PORT: port().default(80),
         }
       )
     ).toStrictEqual({
@@ -277,7 +278,7 @@ describe("parseCore", () => {
         },
         {
           HOST: z.string(),
-          PORT: z.number().int().nonnegative().lte(65535),
+          PORT: port(),
         }
       )
     ).toThrow();
@@ -302,7 +303,7 @@ describe("parseCore", () => {
       {
         HOST: z.string(),
         PORT: {
-          schema: z.number().int().nonnegative().lte(65535),
+          schema: port(),
           defaults: { _: 4040 },
         },
       }
@@ -324,7 +325,7 @@ describe("parseCore", () => {
         {
           HOST: z.string(),
           PORT: {
-            schema: z.number().int().nonnegative().lte(65535),
+            schema: port(),
             defaults: { _: 70000 },
           },
         }
