@@ -208,6 +208,21 @@ describe("parseCore", () => {
     });
   });
 
+  it("handles optional values", () => {
+    const res = parseEnv(
+      { dogs: "12" },
+      {
+        cats: z.number().nonnegative().optional(),
+        dogs: z.bigint().optional(),
+      }
+    );
+
+    expect(res).toStrictEqual({
+      cats: undefined,
+      dogs: 12n,
+    });
+  });
+
   it("handles an object", () => {
     const animal = z.object({
       sound: z.string(),

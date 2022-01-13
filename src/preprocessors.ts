@@ -71,17 +71,19 @@ export function getPreprocessorByZodType(
 
     case TypeName.ZodOptional: {
       const { innerType } = def;
+      const pp = getPreprocessorByZodType(innerType);
       return (arg) => {
         if (arg == null) return undefined;
-        return getPreprocessorByZodType(innerType);
+        return pp(arg);
       };
     }
 
     case TypeName.ZodNullable: {
       const { innerType } = def;
+      const pp = getPreprocessorByZodType(innerType);
       return (arg) => {
         if (arg == null) return null;
-        return getPreprocessorByZodType(innerType);
+        return pp(arg);
       };
     }
 
