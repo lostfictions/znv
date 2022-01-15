@@ -35,12 +35,12 @@ export type DetailedSpec<
        * development.
        *
        * A special key for this object is `_`, which means "the default when
-       * `NODE_ENV` isn't defined."
+       * `NODE_ENV` isn't defined or doesn't match any other provided default."
        *
        * You can also use `.default()` in a Zod schema to provide a default (for
        * example, `z.number().gte(20).default(50)`).
        */
-      defaults?: Record<string, TIn>;
+      defaults?: Record<string, TIn | undefined>;
     }
   : never;
 
@@ -94,13 +94,11 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
 
 /**
  * Mostly an internal convenience function for testing. Returns the input
- * parameter unchanged, with validation of the `defaults` field applied.
+ * parameter unchanged, but with the same inference used in `parseEnv` applied.
  */
-export function inferSchema<T extends Schemas>(
+export const inferSchemas = <T extends Schemas>(
   schemas: T & RestrictSchemas<T>
-): T & RestrictSchemas<T> {
-  return schemas;
-}
+): T & RestrictSchemas<T> => schemas;
 
 /**
  * Parses the passed environment object using the provided map of Zod schemas
