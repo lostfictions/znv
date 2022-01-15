@@ -1,8 +1,14 @@
 # znv
 
+<p align="center">
+<img src="logo.svg" height="90">
+</p>
+
+<p align="center">
 <a href="https://www.npmjs.com/package/znv">
 <img src="https://img.shields.io/npm/v/znv.svg?logo=npm" alt="NPM version" />
 </a>
+</p>
 
 Parse your environment with [Zod](https://github.com/colinhacks/zod).
 
@@ -11,6 +17,16 @@ read-only environment object that you can export for use in your app. You can
 optionally provide defaults (which can be matched against `NODE_ENV` values like
 `production` or `development`), as well as help strings that will be included in
 the error thrown when an env var is missing.
+
+- [Quickstart](#quickstart)
+- [Motivation](#motivation)
+- [Usage](#usage)
+  - [`parseEnv`](#parseenvenvironment-schemas)
+  - [Extra schemas](#extra-schemas)
+- [Coercion rules](#coercion-rules)
+- [Comparison to other libraries](#comparison-to-other-libraries)
+- [Complementary tooling](#complementary-tooling)
+- [How do I pronounce znv?](#how-do-i-pronounce-znv)
 
 ## Quickstart
 
@@ -61,7 +77,7 @@ export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
       // value of `NODE_ENV`.
       defaults: {
         production: "my-cool-llama.website",
-        staging: "cool-llama-staging.cloud-provider.zone",
+        test: "cool-llama-staging.cloud-provider.zone",
 
         // "_" is a special token that can be used in `defaults`. its value will
         // be used if `NODE_ENV` doesn't match any other provided key.
@@ -110,12 +126,12 @@ can often turn into an ad-hoc affair, with access and validation scattered
 across your codebase. At worst, a misconfigured environment will launch and run
 without apparent error, with issues only making themselves apparent later when a
 certain code path is hit. A good way to avoid this is to **declare and validate
-environment variables in one place** and to export the validated result, so that
+environment variables in one place** and export the validated result, so that
 other parts of your code can make their dependencies on these vars explicit.
 
-Additionally, env vars represent one of the _boundaries_ of your application,
-just like file I/O or a server request. In TypeScript, as in many other typed
-languages, these boundaries present a challenge to maintaining a well-typed app.
+Env vars represent one of the _boundaries_ of your application, just like file
+I/O or a server request. In TypeScript, as in many other typed languages, these
+boundaries present a challenge to maintaining a well-typed app.
 [Zod](https://github.com/colinhacks/zod) does an excellent job at parsing and
 validating poorly-typed data at boundaries into clean, well-typed values. znv
 facilitates its use for environment validation.
@@ -135,9 +151,10 @@ do as little work as possible and defer to your schema to handle the validation.
 In practice, this should be pretty much transparent to you, but you can check
 out the [coercion rules](#coercion-rules) if you'd like more info.
 
-Additionally, znv also makes it easy to define defaults for env vars based on
-your environment. Zod allows you to define schema defaults, but a default vary
-by environment is not straightforward.
+znv also makes it easy to define defaults for env vars based on your
+environment. Zod allows you to define schema defaults, but making a given
+default vary by environment or only act as a fallback in certain environments is
+not straightforward.
 
 ## Usage
 
@@ -152,9 +169,12 @@ all parsing failures for the schemas.
 
 #### `environment: Record<string, string | undefined>`
 
-You usually want to pass in `process.env` as the first argument. **It is not
-recommended** to use znv for general-purpose schema validation — just use Zod
-for that.
+You usually want to pass in `process.env` as the first argument.
+
+> **It is not recommended** to use znv for general-purpose schema validation —
+> just use Zod (with
+> [preprocessors](https://github.com/colinhacks/zod#preprocess) to handle
+> coercion, if necessary).
 
 #### `schemas: Record<string, ZodType | DetailedSpec>`
 
