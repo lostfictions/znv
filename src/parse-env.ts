@@ -146,29 +146,34 @@ export function parseEnv<T extends Schemas>(
   }
 
   if (errors.length > 0) {
-    throw new Error(
-      `${red("Errors found!")}\n${errors
-        .map(
-          ([k, v, e]) =>
-            `  [${yellow(k)}]:\n${(e instanceof Error
-              ? e.message
-              : JSON.stringify(e)
-            )
-              .split("\n")
-              .map((line) => `    ${line}`)
-              .join("\n")}\n    (received ${
-              typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
-            })${
-              schemas[k]?.description
-                ? `\n\n  Description of [${yellow(k)}]: ${
-                    schemas[k]!.description
-                  }`
-                : ""
-            }`
-        )
-        .join("\n\n")}\n`
-    );
+    throw new Error(reportErrors(errors, schemas));
   }
 
   return parsed as DeepReadonlyObject<ParsedSchema<T>>;
+}
+
+const indent = (msg: string) =>
+  msg
+              .split("\n")
+              .map((line) => `    ${line}`)
+    .join("\n");
+
+function reportErrors(
+  errors: [key: string, receivedValue: any, error: any][],
+  schemas: Schemas
+): string {
+  const errorMap = errors.map(
+    ([k, v, e]) =>
+      `  [${yellow(k)}]:\n${indent(
+        e instanceof Error ? e.message : JSON.stringify(e)
+      )}\n    (received ${
+              typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
+            })${
+              schemas[k]?.description
+          ? `\n\n  Description of [${yellow(k)}]: ${schemas[k]!.description}`
+                : ""
+            }`
+    );
+
+  return `${red("Errors found!")}\n${errorMap.join("\n\n")}\n`;
 }
