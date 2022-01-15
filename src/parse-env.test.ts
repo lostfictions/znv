@@ -3,6 +3,8 @@ import * as z from "zod";
 import { parseEnv } from "./parse-env";
 import { port } from "./extra-schemas";
 
+// FIXME: many of these don't need to be parse of parseCore tests, or at minimum
+// can be categorized further
 describe("parseCore", () => {
   it("handles a basic case", () => {
     const x = parseEnv(
@@ -447,5 +449,23 @@ describe("parseCore", () => {
 
       expect(SOME_SCHEMA).toStrictEqual(defaultValue);
     }
+  });
+
+  it("handles undefined in production and the given default otherwise", () => {
+    const schema = {
+      COOL: {
+        schema: z.string().nonempty(),
+        defaults: {
+          production: undefined,
+          _: "verycool",
+        },
+      },
+    };
+
+    const expected = { COOL: "verycool" };
+
+    expect(parseEnv({}, schema)).toStrictEqual(expected);
+    expect(parseEnv({ NODE_ENV: "dev" }, schema)).toStrictEqual(expected);
+    expect(() => parseEnv({ NODE_ENV: "production" }, schema)).toThrow();
   });
 });

@@ -81,11 +81,13 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
   nodeEnv: string | undefined
 ): [hasDefault: boolean, defaultValue: TIn | undefined] {
   if (defaults) {
-    if (nodeEnv == null) {
-      if ("_" in defaults) return [true, defaults["_"]];
-    } else if (Object.prototype.hasOwnProperty.call(defaults, nodeEnv)) {
+    if (
+      nodeEnv != null &&
+      Object.prototype.hasOwnProperty.call(defaults, nodeEnv)
+    ) {
       return [true, defaults[nodeEnv]];
     }
+    if ("_" in defaults) return [true, defaults["_"]];
   }
   return [false, undefined];
 }
