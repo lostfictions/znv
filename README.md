@@ -321,3 +321,10 @@ is recommended to restrict usage of `process.env` outside of the module that
 parses your schema.
 
 znv also works great with [dotenv](https://github.com/motdotla/dotenv).
+
+## How do I pronounce znv?
+
+If you usually pronounce "z" as "zed," then you could say "zenv." If you usually
+pronounce "z" as "zee," you could say "zee en vee."
+
+Or do your own thing. I'm not the boss of you.
