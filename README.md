@@ -32,9 +32,9 @@ export const { LLAMA_COUNT, COLOR } = parseEnv(process.env, {
 });
 ```
 
-In the above example, the exported values `API_SERVER`, `LLAMA_COUNT`, and
-`COLOR` are all guaranteed to be defined and will be typed as `string`,
-`number`, and `'red' | 'blue'`, respectively.
+In the above example, the exported values `LLAMA_COUNT` and `COLOR` are
+guaranteed to be defined and will be typed as `number` and `'red' | 'blue'`
+respectively.
 
 A more elaborate example:
 
@@ -117,7 +117,8 @@ Additionally, env vars represent one of the _boundaries_ of your application,
 similar to an FFI call or a server request. In TypeScript, as in many other
 typed languages, these boundaries present a challenge to maintaining a
 well-typed app. [Zod](https://github.com/colinhacks/zod) does an excellent job
-at parsing and validating poorly-typed data into clean, well-typed values.
+at parsing and validating poorly-typed data at boundaries into clean, well-typed
+values. znv facilitates its use for environment validation.
 
 ### What does znv actually do?
 
@@ -133,6 +134,10 @@ These preprocessors don't do any validation of their own — in fact, they try t
 do as little work as possible and defer to your schema to handle the validation.
 In practice, this should be pretty much transparent to you, but you can check
 out the [coercion rules](#coercion-rules) if you'd like more info.
+
+Additionally, znv also makes it easy to define defaults for env vars based on
+your environment. Zod allows you to define schema defaults, but a default vary
+by environment is not straightforward.
 
 ## Usage
 
@@ -207,7 +212,7 @@ pass a `DetailedSpec` object that has the following fields:
   several tools and libraries. For example,
   [`npm install`](https://docs.npmjs.com/cli/v8/commands/npm-install) and
   [`yarn install`](https://classic.yarnpkg.com/en/docs/cli/install#toc-yarn-install-production-true-false)
-  won't install `devDependencies` if `NODE_ENV=production`;
+  by default won't install `devDependencies` if `NODE_ENV=production`;
   [Express](https://expressjs.com/en/advanced/best-practice-performance.html#set-node_env-to-production)
   and [React](https://reactjs.org/docs/optimizing-performance.html) will also
   behave differently depending on whether `NODE_ENV` is `production` or not.
@@ -240,7 +245,7 @@ pass a `DetailedSpec` object that has the following fields:
 
 ### Extra schemas
 
-znv exports a very small number of extra schema for common env var types.
+znv exports a very small number of extra schemas for common env var types.
 
 #### `port()`
 
@@ -248,12 +253,9 @@ znv exports a very small number of extra schema for common env var types.
 
 #### `deprecate()`
 
-`deprecate()` is an alias for `z.undefined().transform(() => undefined as never)`.
-This will do two things:
-
-- throw if the var is defined in the environment
-- yield a TypeScript error if the value returned from `parseEnv` is used
-  anywhere in your code.
+`deprecate()` is an alias for
+`z.undefined().transform(() => undefined as never)`. `parseEnv` will throw if a
+var using the `deprecate()` schema is passed in from the environment.
 
 ## Coercion rules
 
