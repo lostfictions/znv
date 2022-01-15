@@ -468,4 +468,16 @@ describe("parseCore", () => {
     expect(parseEnv({ NODE_ENV: "dev" }, schema)).toStrictEqual(expected);
     expect(() => parseEnv({ NODE_ENV: "production" }, schema)).toThrow();
   });
+
+  it("throws when a value is passed to z.undefined()", () => {
+    expect(() =>
+      parseEnv({ DEPRECATED: "something" }, { DEPRECATED: z.undefined() })
+    ).toThrow();
+
+    expect(() =>
+      parseEnv({ DEPRECATED: "" }, { DEPRECATED: z.undefined() })
+    ).toThrow();
+
+    expect(() => parseEnv({}, { DEPRECATED: z.undefined() })).not.toThrow();
+  });
 });

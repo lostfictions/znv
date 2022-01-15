@@ -37,8 +37,8 @@ export type DetailedSpec<
        * A special key for this object is `_`, which means "the default when
        * `NODE_ENV` isn't defined or doesn't match any other provided default."
        *
-       * You can also use `.default()` in a Zod schema to provide a default (for
-       * example, `z.number().gte(20).default(50)`).
+       * You can also use `.default()` in a Zod schema to provide a default.
+       * (For example, `z.number().gte(20).default(50)`.)
        */
       defaults?: Record<string, TIn | undefined>;
     }
@@ -154,8 +154,8 @@ export function parseEnv<T extends Schemas>(
 
 const indent = (msg: string) =>
   msg
-              .split("\n")
-              .map((line) => `    ${line}`)
+    .split("\n")
+    .map((line) => `    ${line}`)
     .join("\n");
 
 function reportErrors(
@@ -167,13 +167,13 @@ function reportErrors(
       `  [${yellow(k)}]:\n${indent(
         e instanceof Error ? e.message : JSON.stringify(e)
       )}\n    (received ${
-              typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
-            })${
-              schemas[k]?.description
+        typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
+      })${
+        schemas[k]?.description
           ? `\n\n  Description of [${yellow(k)}]: ${schemas[k]!.description}`
-                : ""
-            }`
-    );
+          : ""
+      }`
+  );
 
   return `${red("Errors found!")}\n${errorMap.join("\n\n")}\n`;
 }
