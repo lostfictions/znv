@@ -114,11 +114,11 @@ environment variables in one place** and to export the validated result, so that
 other parts of your code can make their dependencies on these vars explicit.
 
 Additionally, env vars represent one of the _boundaries_ of your application,
-similar to an FFI call or a server request. In TypeScript, as in many other
-typed languages, these boundaries present a challenge to maintaining a
-well-typed app. [Zod](https://github.com/colinhacks/zod) does an excellent job
-at parsing and validating poorly-typed data at boundaries into clean, well-typed
-values. znv facilitates its use for environment validation.
+just like file I/O or a server request. In TypeScript, as in many other typed
+languages, these boundaries present a challenge to maintaining a well-typed app.
+[Zod](https://github.com/colinhacks/zod) does an excellent job at parsing and
+validating poorly-typed data at boundaries into clean, well-typed values. znv
+facilitates its use for environment validation.
 
 ### What does znv actually do?
 
@@ -206,19 +206,19 @@ pass a `DetailedSpec` object that has the following fields:
   clause in a `switch` case — its value will be used it `NODE_ENV` doesn't match
   any other key in `defaults`.
 
-  Note that it is **not recommended** to use `staging` as a possible value for
-  `NODE_ENV`. Your staging environment should be as similar to your production
-  environment as possible, and `NODE_ENV=production` has special meaning for
-  several tools and libraries. For example,
-  [`npm install`](https://docs.npmjs.com/cli/v8/commands/npm-install) and
-  [`yarn install`](https://classic.yarnpkg.com/en/docs/cli/install#toc-yarn-install-production-true-false)
-  by default won't install `devDependencies` if `NODE_ENV=production`;
-  [Express](https://expressjs.com/en/advanced/best-practice-performance.html#set-node_env-to-production)
-  and [React](https://reactjs.org/docs/optimizing-performance.html) will also
-  behave differently depending on whether `NODE_ENV` is `production` or not.
-  Instead, your staging environment should also set `NODE_ENV=production`, and
-  you should define your own env var(s) for any special configuration that's
-  necessary for your staging environment.
+  > (As an aside, it is **not recommended** to use `staging` as a possible value
+  > for `NODE_ENV`. Your staging environment should be as similar to your
+  > production environment as possible, and `NODE_ENV=production` has special
+  > meaning for several tools and libraries. For example,
+  > [`npm install`](https://docs.npmjs.com/cli/v8/commands/npm-install) and
+  > [`yarn install`](https://classic.yarnpkg.com/en/docs/cli/install#toc-yarn-install-production-true-false)
+  > by default won't install `devDependencies` if `NODE_ENV=production`;
+  > [Express](https://expressjs.com/en/advanced/best-practice-performance.html#set-node_env-to-production)
+  > and [React](https://reactjs.org/docs/optimizing-performance.html) will also
+  > behave differently depending on whether `NODE_ENV` is `production` or not.
+  > Instead, your staging environment should also set `NODE_ENV=production`, and
+  > you should define your own env var(s) for any special configuration that's
+  > necessary for your staging environment.)
 
   However, `_` still lets you express a few interesting scenarios:
 
@@ -227,7 +227,7 @@ pass a `DetailedSpec` object that has the following fields:
   // development and testing.
   { production: "prod default", _: "dev default" }
 
-  // default for all environments, but require the var to be defined in prod.
+  // default for all environments, but require the var to be passed in in prod.
   { production: undefined, _: "dev default" }
 
   // unconditional default. equivalent to adding `.default("some default")`
@@ -238,10 +238,11 @@ pass a `DetailedSpec` object that has the following fields:
   Some testing tools like [Jest](https://jestjs.io/) set `NODE_ENV` to `test`,
   so you can also use `defaults` to override env vars for testing.
 
-  `parseEnv` doesn't restrict or validate `NODE_ENV`, but you can add it to your
-  schemas like any other env var. For example, you could use
+  `parseEnv` doesn't restrict or validate `NODE_ENV` to any particular values,
+  but you can add `NODE_ENV` to your schemas like any other env var. For
+  example, you could use
   `NODE_ENV: z.enum(["production", "development", "test", "ci"])` to enforce
-  that `NODE_ENV` is always defined and is one of the expected values.
+  that `NODE_ENV` is always defined and is one of those four expected values.
 
 ### Extra schemas
 
@@ -276,13 +277,12 @@ Some notable coercion mechanics:
 - If your schema's input is an object or array (or record or tuple), znv will
   attempt to `JSON.parse` the input value if it's not `undefined` or empty.
 - If your schema's input is a Date, znv will call `new Date()` with the input
-  value. This has a number of pitfalls, and `Date()` constructor is excessively
-  forgiving. The value is passed in as a string, which means trying to pass a
-  Unix epoch will yield unexpected results. (Epochs need to be passed in as
-  `number`; `new Date()` with an epoch as a string might give you an
-  `invalid date` or might equally give you a well-formed but utterly incorrect
-  date.) _You should only pass in ISO 8601 date strings_, such as those returned
-  by `Date.prototype.toISOString()`.
+  value. This has a number of pitfalls, since the `Date()` constructor is
+  excessively forgiving. The value is passed in as a string, which means trying
+  to pass a Unix epoch will yield unexpected results. (Epochs need to be passed
+  in as `number`: `new Date()` with an epoch as a string will either give you
+  `invalid date` or a completely nonsensical date.) _You should only pass in ISO
+  8601 date strings_, such as those returned by `Date.prototype.toISOString()`.
 - Zod defines "nullable" as distinct from "optional". If your schema is
   nullable, znv will coerce `undefined` to `null`. Generally it's preferred to
   simply use optional.
@@ -291,13 +291,12 @@ Some notable coercion mechanics:
 
 ### [Envalid](https://github.com/af/envalid)
 
-Envalid is a nice little library, and znv's design was inspired by it. Envalid
-has a similar API and is written in TypeScript. It performs some inference of
-the return value based on the validator schema you pass in, but won't do things
-like narrow enumerated types (`str({ choices: ['a', 'b'] })`) to a union of
-literals. Expressing defaults is more limited (you can't have different defaults
-for `test` and `development` environments, for example). Defaults are not passed
-through validators.
+Envalid is a nice library that inspired znv's API design. Envalid is written in
+TypeScript and performs some inference of the return value based on the
+validator schema you pass in, but won't do things like narrow enumerated types
+(`str({ choices: ['a', 'b'] })`) to a union of literals. Expressing defaults is
+more limited (you can't have different defaults for `test` and `development`
+environments, for example). Defaults are not passed through validators.
 
 Envalid's validators are built-in and express a handful of types with limited
 options and no ability to perform postprocessing. For other use cases you have
@@ -309,9 +308,10 @@ some [surprising effects](https://github.com/af/envalid/issues/177).
 
 ### [Joi](https://joi.dev/)
 
-Joi is the "classic" schema validation library. Joi is written in JavaScript,
-and its type definitions support a very limited form of inference when they work
-at all.
+Joi is the Cadillac of schema validation libraries. Its default of coercing
+strings to the target type makes it easy to adopt for environment validation.
+Unfortunately, Joi is written in JavaScript and its type definitions support a
+very limited form of inference when they work at all.
 
 ## Complementary tooling
 
