@@ -1,7 +1,7 @@
 # znv
 
 <p align="center">
-<img src="logo.svg" height="90">
+<img src="logo.svg" height="90" alt="znv logo">
 </p>
 
 <p align="center">
@@ -58,20 +58,7 @@ Let's run this with [ts-node](https://github.com/TypeStrong/ts-node):
 $ LLAMA_COUNT=huge COLOR=cyan ts-node env.ts
 ```
 
-<pre>
-Uncaught Error: <span style="color:#F00">Errors found while parsing environment:</span>
-  [<span style="color:#FF0">NICKNAME</span>]:
-    This field is required.
-    (received <span style="color:#0FF">undefined</span>)
-
-  [<span style="color:#FF0">LLAMA_COUNT</span>]:
-    Expected number, received string
-    (received <span style="color:#0FF">"huge"</span>)
-
-  [<span style="color:#FF0">COLOR</span>]:
-    Invalid enum value. Expected 'red' | 'blue', received 'cyan'
-    (received <span style="color:#0FF">"cyan"</span>)
-</pre>
+<img src="example.png" width="658" alt="A screenshot showing error output, with parsing errors aggregated and grouped by env var.">
 
 Oops! Let's fix those issues:
 
