@@ -42,15 +42,55 @@ Create a file named something like `env.ts`:
 import { parseEnv } from "znv";
 import * as z from "zod";
 
-export const { LLAMA_COUNT, COLOR } = parseEnv(process.env, {
+export const { NICKNAME, LLAMA_COUNT, COLOR, SHINY } = parseEnv(process.env, {
+  NICKNAME: z.string().nonempty(),
   LLAMA_COUNT: z.number().int().positive(),
   COLOR: z.enum(["red", "blue"]),
+  SHINY: z.boolean().default(true),
 });
+
+console.log([NICKNAME, LLAMA_COUNT, COLOR, SHINY].join(", "));
 ```
 
-In the above example, the exported values `LLAMA_COUNT` and `COLOR` are
-guaranteed to be defined and will be typed as `number` and `'red' | 'blue'`
-respectively.
+Let's run this with [ts-node](https://github.com/TypeStrong/ts-node):
+
+```
+$ LLAMA_COUNT=huge COLOR=cyan ts-node env.ts
+```
+
+<pre>
+Uncaught Error: <span style="color:#F00">Errors found while parsing environment:</span>
+  [<span style="color:#FF0">NICKNAME</span>]:
+    This field is required.
+    (received <span style="color:#0FF">undefined</span>)
+
+  [<span style="color:#FF0">LLAMA_COUNT</span>]:
+    Expected number, received string
+    (received <span style="color:#0FF">"huge"</span>)
+
+  [<span style="color:#FF0">COLOR</span>]:
+    Invalid enum value. Expected 'red' | 'blue', received 'cyan'
+    (received <span style="color:#0FF">"cyan"</span>)
+</pre>
+
+Oops! Let's fix those issues:
+
+```
+$ LLAMA_COUNT=24 COLOR=red NICKNAME=coolguy ts-node env.ts
+```
+
+Now we see the expected output:
+
+```
+coolguy, 24, red, true
+```
+
+Since `parseEnv` didn't throw, our exported values are guaranteed to be defined,
+and their types will be inferred based on the schemas we used. (`COLOR` will be
+even be typed to the union of literal strings `'red' | 'blue'` rather than just
+`string`.)
+
+---
 
 A more elaborate example:
 
