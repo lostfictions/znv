@@ -1,7 +1,7 @@
 import * as z from "zod";
-import { yellow, red, cyan } from "colorette";
 
 import { getSchemaWithPreprocessor } from "./preprocessors";
+import { ErrorWithContext, reportErrors, errorMap } from "./reporter";
 
 import type { DeepReadonlyObject } from "./util";
 
@@ -110,38 +110,65 @@ export function parseEnv<T extends Schemas>(
 ): DeepReadonlyObject<ParsedSchema<T>> {
   const parsed: Record<string, unknown> = {} as any;
 
-  const errors: [key: string, receivedValue: any, error: any][] = [];
+  const errors: ErrorWithContext[] = [];
 
   for (const [key, schemaOrSpec] of Object.entries(schemas)) {
     const envValue = env[key];
 
+    let defaultUsed = false;
+    let defaultValue: unknown;
     try {
       if (schemaOrSpec instanceof z.ZodType) {
-        parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(envValue);
+        if (envValue == null && schemaOrSpec instanceof z.ZodDefault) {
+          defaultUsed = true;
+          defaultValue = schemaOrSpec._def.defaultValue();
+          // we "unwrap" the default value ourselves and pass it to the schema.
+          // in the very unlikely case that the value isn't stable AND
+          // validation fails, this ensures the default value we report is the
+          // one that was actually used.
+          // (consider `z.number().gte(0.5).default(() => Math.random())` -- if
+          //  we invoked the default getter and got 0.7, and then ran the parser
+          //  against a missing env var and it generated another default of 0.4,
+          //  we'd report a default value that _should_ have passed.)
+          parsed[key] = schemaOrSpec.parse(defaultValue, { errorMap });
+        } else {
+          parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(
+            envValue,
+            { errorMap }
+          );
+        }
       } else if (envValue == null) {
-        const [hasDefault, defaultValue] = resolveDefaultValueForSpec(
+        [defaultUsed, defaultValue] = resolveDefaultValueForSpec(
           schemaOrSpec.defaults,
           env["NODE_ENV"]
         );
 
-        if (hasDefault) {
-          parsed[key] = schemaOrSpec.schema.parse(defaultValue);
+        if (defaultUsed) {
+          parsed[key] = schemaOrSpec.schema.parse(defaultValue, { errorMap });
         } else {
           // if there's no default, pass our envValue through the
           // schema-with-preprocessor (it's an edge case, but our schema might
           // accept `null`, and the preprocessor will convert `undefined` to
           // `null` for us).
           parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
-            envValue
+            envValue,
+            { errorMap }
           );
         }
       } else {
         parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
-          envValue
+          envValue,
+          { errorMap }
         );
       }
     } catch (e) {
-      errors.push([key, envValue, e]);
+      errors.push({
+        key,
+        receivedValue: envValue,
+        error: e,
+        defaultUsed,
+        defaultValue,
+      });
     }
   }
 
@@ -150,30 +177,4 @@ export function parseEnv<T extends Schemas>(
   }
 
   return parsed as DeepReadonlyObject<ParsedSchema<T>>;
-}
-
-const indent = (msg: string) =>
-  msg
-    .split("\n")
-    .map((line) => `    ${line}`)
-    .join("\n");
-
-function reportErrors(
-  errors: [key: string, receivedValue: any, error: any][],
-  schemas: Schemas
-): string {
-  const errorMap = errors.map(
-    ([k, v, e]) =>
-      `  [${yellow(k)}]:\n${indent(
-        e instanceof Error ? e.message : JSON.stringify(e)
-      )}\n    (received ${
-        typeof v === "undefined" ? cyan("undefined") : `\`${cyan(v)}\``
-      })${
-        schemas[k]?.description
-          ? `\n\n  Description of [${yellow(k)}]: ${schemas[k]!.description}`
-          : ""
-      }`
-  );
-
-  return `${red("Errors found!")}\n${errorMap.join("\n\n")}\n`;
 }
