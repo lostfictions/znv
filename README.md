@@ -40,7 +40,7 @@ Create a file named something like `env.ts`:
 
 ```ts
 import { parseEnv } from "znv";
-import * as z from "zod";
+import { z } from "zod";
 
 export const { NICKNAME, LLAMA_COUNT, COLOR, SHINY } = parseEnv(process.env, {
   NICKNAME: z.string().nonempty(),
@@ -72,17 +72,17 @@ Now we see the expected output:
 coolguy, 24, red, true
 ```
 
-Since `parseEnv` didn't throw, our exported values are guaranteed to be defined,
-and their types will be inferred based on the schemas we used. (`COLOR` will be
-even be typed to the union of literal strings `'red' | 'blue'` rather than just
-`string`.)
+Since `parseEnv` didn't throw, our exported values are guaranteed to be defined.
+Their TypeScript types will be inferred based on the schemas we used — `COLOR`
+will be even be typed to the union of literal strings `'red' | 'blue'` rather
+than just `string`.
 
 ---
 
 A more elaborate example:
 
 ```ts
-// znv re-exports zod as 'z' to save you a few keystrokes.
+// znv re-exports zod as 'z' to save a few keystrokes.
 import { parseEnv, z, port } from "znv";
 
 export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
@@ -116,10 +116,8 @@ export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
     // covered by zod. these can have further refinements chained to them:
     PORT: port().default(8080),
 
-    // using zod arrays or objects as a spec will attempt to `JSON.parse` the
-    // env var if it's present. remember, with great power comes great
-    // responsibility! if you're passing large amounts of data in as an env var,
-    // you may be doing something wrong.
+    // using a zod `array()` or `object()` as a spec will make znv attempt to
+    // `JSON.parse` the env var if it's present.
     EDITORS: z.array(z.string().nonempty()),
 
     // optional values are also supported and provide a way to benefit from the
@@ -250,7 +248,7 @@ pass a `DetailedSpec` object that has the following fields:
   ```
 
   `defaults` accepts a special token as a key: `_`. This is like the `default`
-  clause in a `switch` case — its value will be used it `NODE_ENV` doesn't match
+  clause in a `switch` case — its value will be used if `NODE_ENV` doesn't match
   any other key in `defaults`.
 
   > (As an aside, it is **not recommended** to use `staging` as a possible value
@@ -267,23 +265,25 @@ pass a `DetailedSpec` object that has the following fields:
   > you should define your own env var(s) for any special configuration that's
   > necessary for your staging environment.)
 
-  However, `_` still lets you express a few interesting scenarios:
+  Caveats aside, `_` lets you express a few interesting scenarios:
 
   ```ts
   // one default for production, and one for all other environments, including
   // development and testing.
   { production: "prod default", _: "dev default" }
 
-  // default for all environments, but require the var to be passed in in prod.
+  // default for all non-production environments, but require the var to be
+  // passed in for production.
   { production: undefined, _: "dev default" }
 
   // unconditional default. equivalent to adding `.default("some default")`
-  // to the zod schema.
+  // to the zod schema, but this might be more stylistically consistent with
+  // your other specs if they use the `defaults` field.
   { _: "unconditional default" }
   ```
 
   Some testing tools like [Jest](https://jestjs.io/) set `NODE_ENV` to `test`,
-  so you can also use `defaults` to override env vars for testing.
+  so you can also use `defaults` to provide default env vars for testing.
 
   `parseEnv` doesn't restrict or validate `NODE_ENV` to any particular values,
   but you can add `NODE_ENV` to your schemas like any other env var. For
@@ -307,11 +307,20 @@ var using the `deprecate()` schema is passed in from the environment.
 
 ## Coercion rules
 
-znv tries to do as little work as possible to coerce env vars to the input types
-of your schemas. If a string value doesn't look like the input type, znv will
-pass it to the validator as-is, with the assumption that the validator will
-throw. For example, if your schema is `z.number()` and you pass in "banana", znv
-won't coerce it to `NaN`, it'll let your schema say "hey, this is a banana!"
+znv tries to do as little work as possible to coerce env vars (which are always
+strings when they're present) to the [input
+types](https://github.com/colinhacks/zod#what-about-transforms) of your schemas.
+If the env var doesn't look like the input type, znv will pass it to the
+validator as-is with the assumption that the validator will throw. For example,
+if your schema is `z.number()`, znv will test it against a numeric regex first,
+rather than unconditionally wrap it in `Number()` or `parseFloat()` (and thus
+coerce it to `NaN`).
+
+By modifying as little as possible, znv tries to get out of Zod's way and let it
+do the heavy lifting of validation. This also lets us produce less confusing
+error messages: if you pass the string "banana" to your number schema, it should
+be able to say "you gave me 'banana' instead of a number!" rather than "you gave
+me NaN instead of a number!"
 
 **Coercions only happen at the top level of a schema**. If you define an object
 with nested schemas, no coercions will be applied to the keys.
@@ -321,18 +330,39 @@ Some notable coercion mechanics:
 - If your schema's input is a boolean, znv will coerce `"true"`, `"yes"` and
   `"1"` to `true`, and `"false"`, `"no"` and `"0"` to `false`. All other values
   will be passed through.
+
+  > Some CLI tool conventions dictate that a variable simply being present in
+  > the environment (even with no value, eg. setting `MY_VALUE=` with no
+  > right-hand side) should be interpreted as `true`. However, this convention
+  > doesn't seem to be in widespread use in Node, probably because it causes the
+  > var to evaluate to the empty string (which is falsy). znv demands a little
+  > more specificity by default, while still hedging a bit for some common
+  > true/false equivalents. If you want the "any defined value" behaviour, you
+  > can use
+  > `z.string().optional().transform(v => v === undefined ? false : true)`.
+
 - If your schema's input is an object or array (or record or tuple), znv will
   attempt to `JSON.parse` the input value if it's not `undefined` or empty.
+
+  > **Remember, with great power comes great responsibility!** If you're using
+  > an object or array schema to pass in dozens or hundreds of kilobytes of data
+  > as an env var, you may be doing something wrong. (Certain platforms also
+  > [impose limits on environment variable
+  > length](https://devblogs.microsoft.com/oldnewthing/20100203-00/?p=15083).)
+
 - If your schema's input is a Date, znv will call `new Date()` with the input
   value. This has a number of pitfalls, since the `Date()` constructor is
   excessively forgiving. The value is passed in as a string, which means trying
   to pass a Unix epoch will yield unexpected results. (Epochs need to be passed
   in as `number`: `new Date()` with an epoch as a string will either give you
   `invalid date` or a completely nonsensical date.) _You should only pass in ISO
-  8601 date strings_, such as those returned by `Date.prototype.toISOString()`.
+  8601 date strings_, such as those returned by
+  [`Date.prototype.toISOString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString).
+  Improved validation for Date schemas could be added in a future version.
+
 - Zod defines "nullable" as distinct from "optional". If your schema is
-  nullable, znv will coerce `undefined` to `null`. Generally it's preferred to
-  simply use optional.
+  `nullable`, znv will coerce `undefined` to `null`. Generally it's preferred to
+  simply use `optional`.
 
 ## Comparison to other libraries
 
