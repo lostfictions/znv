@@ -151,11 +151,19 @@ export function getPreprocessorByZodType(
         `Zod type not yet supported: "${typeName}" (PRs welcome)`
       );
 
+    case TypeName.ZodAny:
+    case TypeName.ZodUnknown:
+      throw new Error(
+        [
+          `Zod type not supported: ${typeName}`,
+          "You can use `z.string()` or `z.string().optional()` instead of the above type.",
+          "(Environment variables are already constrained to `string | undefined`.)",
+        ].join("\n")
+      );
+
     // some of these types could maybe be supported (if only via the identity
     // function), but don't necessarily represent something meaningful as a
     // top-level schema passed to znv.
-    case TypeName.ZodAny:
-    case TypeName.ZodUnknown:
     case TypeName.ZodVoid:
     case TypeName.ZodNever:
     case TypeName.ZodLazy:
