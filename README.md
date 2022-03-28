@@ -20,7 +20,11 @@ the error thrown when an env var is missing.
 
 ## Status
 
-Unstable. There may be breaking changes before v1.0.0.
+Unstable: znv has not yet hit v1.0.0, and per semver there may be breaking
+changes in minor versions before the v1.0.0 release. Any (known) breaking
+changes will be documented in release notes. znv is used in production in
+several services at the primary author's workplace. Feedback and suggestions
+about final API design are welcome.
 
 ## Contents
 
@@ -171,11 +175,11 @@ facilitates its use for environment validation.
 
 znv is a small module that works hand-in-hand with Zod. Since env vars, when
 defined, are always strings, Zod schemas like `z.number()` will fail to parse
-them out-of-the-box. Zod offers a [`preprocess`
+them out-of-the-box. Zod allows you to use a [`preprocess`
 schema](https://github.com/colinhacks/zod#preprocess) to handle coercions, but
-it can make authoring schemas verbose and clunky. znv wraps each of the Zod
-schemas you pass to `parseEnv` in a preprocessor that tries to coerce a string
-to a type the schema expects.
+peppering your schemas with preprocessors to this end is verbose, error-prone,
+and clunky. znv wraps each of the Zod schemas you pass to `parseEnv` in a
+preprocessor that tries to coerce a string to a type the schema expects.
 
 These preprocessors don't do any validation of their own — in fact, they try to
 do as little work as possible and defer to your schema to handle the validation.
@@ -183,9 +187,9 @@ In practice, this should be pretty much transparent to you, but you can check
 out the [coercion rules](#coercion-rules) if you'd like more info.
 
 znv also makes it easy to define defaults for env vars based on your
-environment. Zod allows you to define schema defaults, but making a given
-default vary by environment or only act as a fallback in certain environments is
-not straightforward.
+environment. Zod allows you to add a default value for a schema, but making a
+given default vary by environment or only act as a fallback in certain
+environments is not straightforward.
 
 ## Usage
 
