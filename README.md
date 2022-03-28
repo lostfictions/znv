@@ -18,6 +18,12 @@ optionally provide defaults (which can be matched against `NODE_ENV` values like
 `production` or `development`), as well as help strings that will be included in
 the error thrown when an env var is missing.
 
+## Status
+
+Unstable. There may be breaking changes before v1.0.0.
+
+## Contents
+
 - [Quickstart](#quickstart)
 - [Motivation](#motivation)
 - [Usage](#usage)
@@ -342,7 +348,8 @@ Some notable coercion mechanics:
   > `z.string().optional().transform(v => v === undefined ? false : true)`.
 
 - If your schema's input is an object or array (or record or tuple), znv will
-  attempt to `JSON.parse` the input value if it's not `undefined` or empty.
+  attempt to `JSON.parse` the input value if it's not `undefined` or the empty
+  string.
 
   > **Remember, with great power comes great responsibility!** If you're using
   > an object or array schema to pass in dozens or hundreds of kilobytes of data
