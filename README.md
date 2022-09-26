@@ -53,7 +53,7 @@ import { parseEnv } from "znv";
 import { z } from "zod";
 
 export const { NICKNAME, LLAMA_COUNT, COLOR, SHINY } = parseEnv(process.env, {
-  NICKNAME: z.string().nonempty(),
+  NICKNAME: z.string().min(1),
   LLAMA_COUNT: z.number().int().positive(),
   COLOR: z.enum(["red", "blue"]),
   SHINY: z.boolean().default(true),
@@ -103,7 +103,7 @@ export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
 
     // specs can also be more detailed.
     HOST: {
-      schema: z.string().nonempty(),
+      schema: z.string().min(1),
 
       // the description is handy as in-code documentation, but is also printed
       // to the console if validation for this env var fails.
@@ -128,7 +128,7 @@ export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
 
     // using a zod `array()` or `object()` as a spec will make znv attempt to
     // `JSON.parse` the env var if it's present.
-    EDITORS: z.array(z.string().nonempty()),
+    EDITORS: z.array(z.string().min(1)),
 
     // optional values are also supported and provide a way to benefit from the
     // validation and static typing provided by zod even if you don't want to
@@ -233,7 +233,7 @@ pass a `DetailedSpec` object that has the following fields:
   ```ts
   const schemas = {
     FRUIT: {
-      schema: z.string().nonempty(),
+      schema: z.string().min(1),
       defaults: {
         production: "orange",
         development: "banana",
