@@ -22,7 +22,7 @@ export function getPreprocessorByZodType(
 
     case TypeName.ZodNumber:
       return (arg) => {
-        if (typeof arg === "string" && /^\d+(\.\d+)?$/.test(arg)) {
+        if (typeof arg === "string" && /^-?\d+(\.\d+)?$/.test(arg)) {
           return Number(arg);
         }
         return arg;
@@ -30,7 +30,7 @@ export function getPreprocessorByZodType(
 
     case TypeName.ZodBigInt:
       return (arg) => {
-        if (typeof arg === "string" && /^\d+$/.test(arg)) {
+        if (typeof arg === "string" && /^-?\d+$/.test(arg)) {
           return BigInt(arg);
         }
         return arg;

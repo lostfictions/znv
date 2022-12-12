@@ -3,7 +3,7 @@ import * as z from "zod";
 import { parseEnv } from "./parse-env";
 import { port } from "./extra-schemas";
 
-// FIXME: many of these don't need to be parse of parseCore tests, or at minimum
+// FIXME: many of these don't need to be part of parseCore tests, or at minimum
 // can be categorized further
 describe("parseCore", () => {
   it("handles a basic case", () => {
@@ -225,9 +225,69 @@ describe("parseCore", () => {
     });
   });
 
+  it("handles an optional nonempty string", () => {
+    expect(
+      parseEnv(
+        {},
+        {
+          myValue: z.string().nonempty().optional(),
+        }
+      )
+    ).toStrictEqual({
+      myValue: undefined,
+    });
+
+    expect(() =>
+      parseEnv(
+        { myValue: "" },
+        {
+          myValue: z.string().nonempty().optional(),
+        }
+      )
+    ).toThrow();
+  });
+
   it("fails a string schema when value is missing", () => {
     // a missing value should never be coerced to an empty string, for example
     expect(() => parseEnv({}, { dogs: z.string() })).toThrow();
+  });
+
+  it("handles a positive int", () => {
+    expect(
+      parseEnv({ dogCount: "34" }, { dogCount: z.number() })
+    ).toStrictEqual({
+      dogCount: 34,
+    });
+  });
+
+  it("handles a positive float", () => {
+    expect(
+      parseEnv({ dogCount: "29.453" }, { dogCount: z.number() })
+    ).toStrictEqual({
+      dogCount: 29.453,
+    });
+  });
+
+  it("handles a negative int", () => {
+    expect(
+      parseEnv({ dogCount: "-32" }, { dogCount: z.number() })
+    ).toStrictEqual({
+      dogCount: -32,
+    });
+  });
+
+  it("handles a negative float", () => {
+    expect(
+      parseEnv({ dogCount: "-329.3" }, { dogCount: z.number() })
+    ).toStrictEqual({
+      dogCount: -329.3,
+    });
+  });
+
+  it("throws on a number schema given a string with leading dash", () => {
+    expect(() =>
+      parseEnv({ dogCount: "-323hello3.3942" }, { dogCount: z.number() })
+    ).toThrow();
   });
 
   it("handles an object", () => {
