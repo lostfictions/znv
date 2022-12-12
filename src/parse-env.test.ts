@@ -540,4 +540,31 @@ describe("parseCore", () => {
 
     expect(() => parseEnv({}, { DEPRECATED: z.undefined() })).not.toThrow();
   });
+
+  it("handles a schema with refinement type", () => {
+    const schema = {
+      AT_LEAST_FIVE_WORDS: z.string().refine((s) => s.split(" ").length >= 5),
+    };
+
+    expect(() =>
+      parseEnv({ AT_LEAST_FIVE_WORDS: "only four words here" }, schema)
+    ).toThrow();
+
+    expect(() =>
+      parseEnv({ AT_LEAST_FIVE_WORDS: "but there's five words here!" }, schema)
+    ).not.toThrow();
+  });
+
+  it("handles a schema that transforms the result", () => {
+    const res = parseEnv(
+      {
+        wordList: "hello there friends",
+      },
+      {
+        wordList: z.string().transform((s) => s.split(" ")),
+      }
+    );
+
+    expect(res).toStrictEqual({ wordList: ["hello", "there", "friends"] });
+  });
 });
