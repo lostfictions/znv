@@ -22,13 +22,17 @@ export function getPreprocessorByZodType(
 
     case TypeName.ZodNumber:
       return (arg) => {
-        if (/^\d+(\.\d+)?$/.test(arg!)) return Number(arg);
+        if (typeof arg === "string" && /^\d+(\.\d+)?$/.test(arg)) {
+          return Number(arg);
+        }
         return arg;
       };
 
     case TypeName.ZodBigInt:
       return (arg) => {
-        if (/^\d+$/.test(arg!)) return BigInt(arg!);
+        if (typeof arg === "string" && /^\d+$/.test(arg)) {
+          return BigInt(arg);
+        }
         return arg;
       };
 
@@ -52,18 +56,20 @@ export function getPreprocessorByZodType(
     // for now, this hedge seems to work fine, but it might be worth revisiting.
     case TypeName.ZodBoolean:
       return (arg) => {
-        switch (arg) {
-          case "true":
-          case "yes":
-          case "1":
-            return true;
-          case "false":
-          case "no":
-          case "0":
-            return false;
-          default:
-            return arg;
+        if (typeof arg === "string") {
+          // eslint-disable-next-line default-case
+          switch (arg) {
+            case "true":
+            case "yes":
+            case "1":
+              return true;
+            case "false":
+            case "no":
+            case "0":
+              return false;
+          }
         }
+        return arg;
       };
 
     case TypeName.ZodArray:
