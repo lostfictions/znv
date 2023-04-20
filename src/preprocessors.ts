@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { assertNever } from "./util";
+import { assertNever } from "./util.js";
 
 const { ZodFirstPartyTypeKind: TypeName } = z;
 
@@ -177,6 +177,11 @@ export function getPreprocessorByZodType(
     case TypeName.ZodPromise:
     case TypeName.ZodMap:
     case TypeName.ZodSet:
+    case TypeName.ZodNaN:
+    case TypeName.ZodDiscriminatedUnion:
+    case TypeName.ZodCatch:
+    case TypeName.ZodBranded:
+    case TypeName.ZodPipeline:
       throw new Error(`Zod type not supported: ${typeName}`);
 
     default: {

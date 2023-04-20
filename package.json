@@ -2,6 +2,7 @@
   "name": "znv",
   "version": "0.3.2",
   "description": "Parse your environment with Zod schemas",
+  "type": "module",
   "keywords": [
     "env",
     "process.env",
@@ -9,7 +10,8 @@
     "validation"
   ],
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist_module/index.d.ts",
+  "module": "dist_module/index.js",
   "author": "s <https://github.com/lostfictions>",
   "homepage": "https://github.com/lostfictions/znv",
   "repository": {
@@ -21,11 +23,20 @@
   },
   "files": [
     "!dist/**/*.test.*",
-    "dist/"
+    "dist/",
+    "dist_module/"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist_module/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist_module/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/ && tsc",
+    "build": "rm -rf dist/ && rm -rf dist_module/ && tsc && tsc --project tsconfig.cjs.build.json && sh esm-postbuild.sh",
     "test": "run-p -cl test:*",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
@@ -43,25 +54,32 @@
   },
   "devDependencies": {
     "@types/jest": "^29.2.4",
-    "@types/node": "^16.18.8",
-    "eslint": "^8.29.0",
+    "@types/node": "^16.18.24",
+    "eslint": "^8.38.0",
     "eslint-config-lostfictions": "^5.0.0",
-    "jest": "^29.3.1",
+    "jest": "^29.5.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.1",
-    "ts-jest": "^29.0.3",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.7.4",
-    "zod": "^3.11.6"
+    "typescript": "^4.9.5",
+    "zod": "^3.21.4"
   },
   "jest": {
-    "preset": "ts-jest",
+    "preset": "ts-jest/presets/default-esm",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
     "rootDir": "src",
     "transform": {
       "^.+\\.tsx?$": [
         "ts-jest",
         {
-          "isolatedModules": true
+          "isolatedModules": true,
+          "useESM": true
         }
       ]
     }

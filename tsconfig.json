@@ -4,8 +4,9 @@
     "lib": [
       "ES2021"
     ],
-    "module": "commonjs",
-    "outDir": "dist",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "outDir": "dist_module",
     "strict": true,
     "declaration": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -19,7 +20,4 @@
   "include": [
     "src"
   ],
-  "exclude": [
-    "**/*.test.ts"
-  ]
 }

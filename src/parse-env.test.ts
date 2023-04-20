@@ -1,7 +1,7 @@
 import * as z from "zod";
 
-import { parseEnv } from "./parse-env";
-import { port } from "./extra-schemas";
+import { parseEnv } from "./parse-env.js";
+import { port } from "./extra-schemas.js";
 
 // FIXME: many of these don't need to be part of parseCore tests, or at minimum
 // can be categorized further
