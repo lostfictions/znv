@@ -22,7 +22,6 @@
     "url": "https://github.com/lostfictions/znv/issues"
   },
   "files": [
-    "!dist/**/*.test.*",
     "dist/",
     "dist_module/"
   ],
