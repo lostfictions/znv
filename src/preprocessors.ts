@@ -179,9 +179,6 @@ export function getPreprocessorByZodType(
     case TypeName.ZodSet:
     case TypeName.ZodNaN:
     case TypeName.ZodDiscriminatedUnion:
-    case TypeName.ZodCatch:
-    case TypeName.ZodBranded:
-    case TypeName.ZodPipeline:
       throw new Error(`Zod type not supported: ${typeName}`);
 
     default: {
