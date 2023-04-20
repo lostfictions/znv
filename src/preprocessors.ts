@@ -178,7 +178,6 @@ export function getPreprocessorByZodType(
     case TypeName.ZodMap:
     case TypeName.ZodSet:
     case TypeName.ZodNaN:
-    case TypeName.ZodDiscriminatedUnion:
       throw new Error(`Zod type not supported: ${typeName}`);
 
     default: {
