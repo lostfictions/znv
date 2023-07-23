@@ -1,6 +1,6 @@
 import { ZodError, ZodErrorMap, ZodIssueCode } from "zod";
 import { yellow, red, cyan, green } from "colorette";
-import { Schemas } from "./parse-env";
+import { DetailedSpec, Schemas } from './parse-env';
 
 // Even though we also have our own formatter, we pass a custom error map to
 // Zod's `.parse()` for two reasons:
@@ -34,6 +34,7 @@ export function reportErrors(
   const formattedErrors = errors.map(
     ({ key, receivedValue, error, defaultUsed, defaultValue }) => {
       const message: string[] = [`[${yellow(key)}]:`];
+      const valueStringifier = (schemas[key] as DetailedSpec).valueStringifier ?? JSON.stringify;
 
       if (error instanceof ZodError) {
         const { formErrors, fieldErrors } = error.flatten();
@@ -61,7 +62,7 @@ export function reportErrors(
           `(received ${cyan(
             receivedValue === undefined
               ? "undefined"
-              : JSON.stringify(receivedValue)
+              : valueStringifier(receivedValue)
           )})`,
           2
         )
@@ -73,7 +74,7 @@ export function reportErrors(
             `(used default of ${cyan(
               defaultValue === undefined
                 ? "undefined"
-                : JSON.stringify(defaultValue)
+                : valueStringifier(defaultValue)
             )})`,
             2
           )

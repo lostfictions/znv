@@ -41,6 +41,18 @@ export type DetailedSpec<
        * (For example, `z.number().gte(20).default(50)`.)
        */
       defaults?: Record<string, TIn | undefined>;
+
+      /**
+       * A function that takes the received value (as a string) or the default
+       * value (as `TIn`, the expected type after parsing) and returns the string
+       * that should be displayed in the error report.
+       *
+       * This can be used, for example, to redact sensitive values from error
+       * reports.
+       *
+       * For example, `(value: string) => value.replace(/./g, '*')`.
+       */
+       valueStringifier?: (value: string | TIn) => string;
     }
   : never;
 
