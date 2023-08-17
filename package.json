@@ -1,6 +1,6 @@
 {
-  "name": "bowlingx-znv",
-  "version": "0.4.2",
+  "name": "znv",
+  "version": "0.3.2",
   "description": "Parse your environment with Zod schemas",
   "type": "module",
   "keywords": [
