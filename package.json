@@ -1,6 +1,6 @@
 {
-  "name": "znv",
-  "version": "0.3.2",
+  "name": "bowlingx-znv",
+  "version": "0.4.2",
   "description": "Parse your environment with Zod schemas",
   "type": "module",
   "keywords": [
@@ -9,9 +9,9 @@
     "zod",
     "validation"
   ],
-  "main": "dist/index.js",
-  "types": "dist_module/index.d.ts",
-  "module": "dist_module/index.js",
+  "main": "dist-cjs/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
   "author": "s <https://github.com/lostfictions>",
   "homepage": "https://github.com/lostfictions/znv",
   "repository": {
@@ -23,15 +23,19 @@
   },
   "files": [
     "dist/",
-    "dist_module/"
+    "dist-cjs/"
   ],
   "exports": {
     ".": {
-      "import": "./dist_module/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist_module/index.d.ts"
-    },
-    "./package.json": "./package.json"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist-cjs/index.d.ts",
+        "default": "./dist-cjs/index.js"
+      }
+    }
   },
   "license": "MIT",
   "scripts": {

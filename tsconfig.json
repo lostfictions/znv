@@ -6,7 +6,7 @@
     ],
     "module": "Node16",
     "moduleResolution": "Node16",
-    "outDir": "dist_module",
+    "outDir": "dist",
     "strict": true,
     "declaration": true,
     "noPropertyAccessFromIndexSignature": true,
