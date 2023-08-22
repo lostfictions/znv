@@ -39,7 +39,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/ && rm -rf dist_module/ && tsc && tsc --project tsconfig.cjs.build.json && sh esm-postbuild.sh",
+    "build": "rm -rf dist/ && find ./dist-cjs -type f ! -iname \"package.json\" -delete && tsc && tsc --project tsconfig.cjs.build.json",
     "test": "run-p -cl test:*",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
