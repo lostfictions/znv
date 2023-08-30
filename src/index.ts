@@ -1,4 +1,4 @@
 export { z } from "zod";
-export * from "./parse-env";
-export * from "./preprocessors";
-export * from "./extra-schemas";
+export * from "./parse-env.js";
+export * from "./preprocessors.js";
+export * from "./extra-schemas.js";

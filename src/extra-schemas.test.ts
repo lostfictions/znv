@@ -1,5 +1,5 @@
-import { parseEnv } from "./parse-env";
-import { deprecate } from "./extra-schemas";
+import { parseEnv } from "./parse-env.js";
+import { deprecate } from "./extra-schemas.js";
 
 describe("extra schemas", () => {
   describe("deprecate", () => {

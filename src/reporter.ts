@@ -1,6 +1,6 @@
 import { ZodError, ZodErrorMap, ZodIssueCode } from "zod";
 import { yellow, red, cyan, green } from "colorette";
-import { Schemas } from "./parse-env";
+import { Schemas } from "./parse-env.js";
 
 // Even though we also have our own formatter, we pass a custom error map to
 // Zod's `.parse()` for two reasons:

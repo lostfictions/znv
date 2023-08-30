@@ -1,9 +1,9 @@
 import * as z from "zod";
 
-import { getSchemaWithPreprocessor } from "./preprocessors";
-import { ErrorWithContext, reportErrors, errorMap } from "./reporter";
+import { getSchemaWithPreprocessor } from "./preprocessors.js";
+import { ErrorWithContext, reportErrors, errorMap } from "./reporter.js";
 
-import type { DeepReadonlyObject } from "./util";
+import type { DeepReadonlyObject } from "./util.js";
 
 export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
   TOut,
