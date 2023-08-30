@@ -230,6 +230,12 @@ pass a `DetailedSpec` object that has the following fields:
   An object that maps from `NODE_ENV` values to values that will be passed as
   input to the schema if this var isn't present in the environment. For example:
 
+- `valueStringifier?: (value: string | TIn) => string`
+
+  A function that takes the received value (as a string) or the default value
+  (as `TIn`, the expected type after parsing) and returns the string that
+  should be displayed in the error report. 
+
   ```ts
   const schemas = {
     FRUIT: {
