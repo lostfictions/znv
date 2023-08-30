@@ -1,6 +1,6 @@
 {
   "name": "znv",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Parse your environment with Zod schemas",
   "type": "module",
   "keywords": [
@@ -39,7 +39,11 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/ && rm -rf dist_module/ && tsc && tsc --project tsconfig.cjs.build.json && sh esm-postbuild.sh",
+    "build": "run-s -l build:*",
+    "build:clean": "rm -rf dist/ dist-cjs/",
+    "build:mjs": "tsc --project tsconfig.build.json",
+    "build:cjs": "tsc --project tsconfig.cjs.build.json",
+    "build:copy": "cp package.cjs.json dist-cjs/package.json",
     "test": "run-p -cl test:*",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
@@ -56,7 +60,7 @@
     "zod": "^3.13.2"
   },
   "devDependencies": {
-    "@types/jest": "^29.2.4",
+    "@types/jest": "^29.5.4",
     "@types/node": "^16.18.24",
     "@babel/preset-typescript": "^7.22.5",
     "eslint": "^8.47.0",
