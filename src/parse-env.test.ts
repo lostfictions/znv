@@ -1,7 +1,7 @@
 import * as z from "zod";
 
-import { parseEnv } from "./parse-env";
-import { port } from "./extra-schemas";
+import { parseEnv } from "./parse-env.js";
+import { port } from "./extra-schemas.js";
 
 // FIXME: many of these don't need to be part of parseCore tests, or at minimum
 // can be categorized further
@@ -15,7 +15,7 @@ describe("parseCore", () => {
       {
         HOST: z.string(),
         PORT: port(),
-      }
+      },
     );
 
     expect(x).toStrictEqual({
@@ -32,7 +32,7 @@ describe("parseCore", () => {
       {
         HOST: z.string().default("localhost"),
         PORT: port(),
-      }
+      },
     );
 
     expect(x).toStrictEqual({
@@ -57,8 +57,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "envhost",
       PORT: 5050,
@@ -77,8 +77,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "prodhost",
       PORT: 80,
@@ -98,8 +98,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "envhost",
       PORT: 80,
@@ -120,8 +120,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "prodhost",
       PORT: 80,
@@ -143,8 +143,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "envhost",
       PORT: 80,
@@ -163,8 +163,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "defaulthost",
       PORT: 80,
@@ -183,8 +183,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "defaulthost",
       PORT: 80,
@@ -202,8 +202,8 @@ describe("parseCore", () => {
             },
           },
           PORT: port().default(80),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       HOST: "zoddefaulthost",
       PORT: 80,
@@ -216,7 +216,7 @@ describe("parseCore", () => {
       {
         cats: z.number().nonnegative().optional(),
         dogs: z.bigint().optional(),
-      }
+      },
     );
 
     expect(res).toStrictEqual({
@@ -231,8 +231,8 @@ describe("parseCore", () => {
         {},
         {
           myValue: z.string().nonempty().optional(),
-        }
-      )
+        },
+      ),
     ).toStrictEqual({
       myValue: undefined,
     });
@@ -242,8 +242,8 @@ describe("parseCore", () => {
         { myValue: "" },
         {
           myValue: z.string().nonempty().optional(),
-        }
-      )
+        },
+      ),
     ).toThrow();
   });
 
@@ -254,7 +254,7 @@ describe("parseCore", () => {
 
   it("handles a positive int", () => {
     expect(
-      parseEnv({ dogCount: "34" }, { dogCount: z.number() })
+      parseEnv({ dogCount: "34" }, { dogCount: z.number() }),
     ).toStrictEqual({
       dogCount: 34,
     });
@@ -262,7 +262,7 @@ describe("parseCore", () => {
 
   it("handles a positive float", () => {
     expect(
-      parseEnv({ dogCount: "29.453" }, { dogCount: z.number() })
+      parseEnv({ dogCount: "29.453" }, { dogCount: z.number() }),
     ).toStrictEqual({
       dogCount: 29.453,
     });
@@ -270,7 +270,7 @@ describe("parseCore", () => {
 
   it("handles a negative int", () => {
     expect(
-      parseEnv({ dogCount: "-32" }, { dogCount: z.number() })
+      parseEnv({ dogCount: "-32" }, { dogCount: z.number() }),
     ).toStrictEqual({
       dogCount: -32,
     });
@@ -278,7 +278,7 @@ describe("parseCore", () => {
 
   it("handles a negative float", () => {
     expect(
-      parseEnv({ dogCount: "-329.3" }, { dogCount: z.number() })
+      parseEnv({ dogCount: "-329.3" }, { dogCount: z.number() }),
     ).toStrictEqual({
       dogCount: -329.3,
     });
@@ -286,7 +286,7 @@ describe("parseCore", () => {
 
   it("throws on a number schema given a string with leading dash", () => {
     expect(() =>
-      parseEnv({ dogCount: "-323hello3.3942" }, { dogCount: z.number() })
+      parseEnv({ dogCount: "-323hello3.3942" }, { dogCount: z.number() }),
     ).toThrow();
   });
 
@@ -306,7 +306,7 @@ describe("parseCore", () => {
           dog: animal,
           cat: animal,
         }),
-      }
+      },
     );
 
     expect(x).toStrictEqual({
@@ -335,7 +335,7 @@ describe("parseCore", () => {
 
     const x = parseEnv(
       { pet: '{ "sound": "woof", "size": "big", "smell": "bad" }' },
-      { pet: z.intersection(animal, thingWithSmell) }
+      { pet: z.intersection(animal, thingWithSmell) },
     );
 
     expect(x).toStrictEqual({
@@ -345,8 +345,8 @@ describe("parseCore", () => {
     expect(() =>
       parseEnv(
         { pet: '{ "sound": "woof", "size": "big" }' },
-        { pet: z.intersection(animal, thingWithSmell) }
-      )
+        { pet: z.intersection(animal, thingWithSmell) },
+      ),
     ).toThrow();
   });
 
@@ -361,15 +361,15 @@ describe("parseCore", () => {
         {
           HOST: z.string(),
           PORT: port(),
-        }
-      )
+        },
+      ),
     ).toThrow();
   });
 
   it("doesn't pass through any env values not in the schema", () => {
     const x = parseEnv(
       { HOST: "localhost", PORT: "5050" },
-      { HOST: z.string() }
+      { HOST: z.string() },
     );
 
     expect(x).toStrictEqual({
@@ -388,7 +388,7 @@ describe("parseCore", () => {
           schema: port(),
           defaults: { _: 4040 },
         },
-      }
+      },
     );
 
     expect(x).toStrictEqual({
@@ -410,8 +410,8 @@ describe("parseCore", () => {
             schema: port(),
             defaults: { _: 70000 },
           },
-        }
-      )
+        },
+      ),
     ).toThrow();
   });
 
@@ -425,7 +425,7 @@ describe("parseCore", () => {
           .number()
           .int()
           .transform((n) => String(n + 10)),
-      }
+      },
     );
 
     // @ts-expect-error (2322) -- shouldn't be assignable to number
@@ -446,7 +446,7 @@ describe("parseCore", () => {
             .transform((n) => String(n + 10)),
           defaults: { _: 8 },
         },
-      }
+      },
     );
 
     const funLevel: string = x.FUN_LEVEL;
@@ -475,8 +475,8 @@ describe("parseCore", () => {
             // @ts-expect-error (2322) -- excess properties should be checked
             nonsense: "oops",
           },
-        }
-      )
+        },
+      ),
     ).toThrow();
   });
 
@@ -491,7 +491,7 @@ describe("parseCore", () => {
     for (const [schema, defaultValue] of schemasWithDefaults) {
       const { SOME_SCHEMA } = parseEnv(
         {},
-        { SOME_SCHEMA: { schema, defaults: { _: defaultValue } } as any }
+        { SOME_SCHEMA: { schema, defaults: { _: defaultValue } } as any },
       );
 
       expect(SOME_SCHEMA).toStrictEqual(defaultValue);
@@ -504,7 +504,7 @@ describe("parseCore", () => {
     for (const [schema, defaultValue] of schemasWithDefaults) {
       const { SOME_SCHEMA } = parseEnv(
         {},
-        { SOME_SCHEMA: schema.default(defaultValue) }
+        { SOME_SCHEMA: schema.default(defaultValue) },
       );
 
       expect(SOME_SCHEMA).toStrictEqual(defaultValue);
@@ -531,11 +531,11 @@ describe("parseCore", () => {
 
   it("throws when a value is passed to z.undefined()", () => {
     expect(() =>
-      parseEnv({ DEPRECATED: "something" }, { DEPRECATED: z.undefined() })
+      parseEnv({ DEPRECATED: "something" }, { DEPRECATED: z.undefined() }),
     ).toThrow();
 
     expect(() =>
-      parseEnv({ DEPRECATED: "" }, { DEPRECATED: z.undefined() })
+      parseEnv({ DEPRECATED: "" }, { DEPRECATED: z.undefined() }),
     ).toThrow();
 
     expect(() => parseEnv({}, { DEPRECATED: z.undefined() })).not.toThrow();
@@ -547,11 +547,11 @@ describe("parseCore", () => {
     };
 
     expect(() =>
-      parseEnv({ AT_LEAST_FIVE_WORDS: "only four words here" }, schema)
+      parseEnv({ AT_LEAST_FIVE_WORDS: "only four words here" }, schema),
     ).toThrow();
 
     expect(() =>
-      parseEnv({ AT_LEAST_FIVE_WORDS: "but there's five words here!" }, schema)
+      parseEnv({ AT_LEAST_FIVE_WORDS: "but there's five words here!" }, schema),
     ).not.toThrow();
   });
 
@@ -562,7 +562,7 @@ describe("parseCore", () => {
       },
       {
         wordList: z.string().transform((s) => s.split(" ")),
-      }
+      },
     );
 
     expect(res).toStrictEqual({ wordList: ["hello", "there", "friends"] });
