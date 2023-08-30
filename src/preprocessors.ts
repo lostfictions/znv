@@ -9,7 +9,7 @@ const { ZodFirstPartyTypeKind: TypeName } = z;
  * undefined!) to a valid input type for the schema.
  */
 export function getPreprocessorByZodType(
-  schema: z.ZodFirstPartySchemaTypes
+  schema: z.ZodFirstPartySchemaTypes,
 ): (arg: string | undefined) => unknown {
   const def = schema._def;
   const { typeName } = def;
@@ -154,7 +154,7 @@ export function getPreprocessorByZodType(
     case TypeName.ZodUnion:
     case TypeName.ZodNativeEnum:
       throw new Error(
-        `Zod type not yet supported: "${typeName}" (PRs welcome)`
+        `Zod type not yet supported: "${typeName}" (PRs welcome)`,
       );
 
     case TypeName.ZodAny:
@@ -164,7 +164,7 @@ export function getPreprocessorByZodType(
           `Zod type not supported: ${typeName}`,
           "You can use `z.string()` or `z.string().optional()` instead of the above type.",
           "(Environment variables are already constrained to `string | undefined`.)",
-        ].join("\n")
+        ].join("\n"),
       );
 
     // some of these types could maybe be supported (if only via the identity
@@ -193,6 +193,6 @@ export function getPreprocessorByZodType(
 export function getSchemaWithPreprocessor(schema: z.ZodTypeAny) {
   return z.preprocess(
     getPreprocessorByZodType(schema) as (arg: unknown) => unknown,
-    schema
+    schema,
   );
 }

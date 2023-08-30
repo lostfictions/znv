@@ -29,7 +29,7 @@ const indent = (str: string, amt: number) => `${" ".repeat(amt)}${str}`;
 
 export function reportErrors(
   errors: ErrorWithContext[],
-  schemas: Schemas
+  schemas: Schemas,
 ): string {
   const formattedErrors = errors.map(
     ({ key, receivedValue, error, defaultUsed, defaultValue }) => {
@@ -52,7 +52,7 @@ export function reportErrors(
         message.push(
           ...JSON.stringify(error, undefined, 2)
             .split("\n")
-            .map((l) => indent(l, 2))
+            .map((l) => indent(l, 2)),
         );
       }
 
@@ -61,10 +61,10 @@ export function reportErrors(
           `(received ${cyan(
             receivedValue === undefined
               ? "undefined"
-              : JSON.stringify(receivedValue)
+              : JSON.stringify(receivedValue),
           )})`,
-          2
-        )
+          2,
+        ),
       );
 
       if (defaultUsed) {
@@ -73,10 +73,10 @@ export function reportErrors(
             `(used default of ${cyan(
               defaultValue === undefined
                 ? "undefined"
-                : JSON.stringify(defaultValue)
+                : JSON.stringify(defaultValue),
             )})`,
-            2
-          )
+            2,
+          ),
         );
       }
 
@@ -84,15 +84,15 @@ export function reportErrors(
       if (desc) {
         message.push("");
         message.push(
-          `Description of [${yellow(key)}]: ${schemas[key]!.description}`
+          `Description of [${yellow(key)}]: ${schemas[key]!.description}`,
         );
       }
 
       return message.map((l) => indent(l, 2)).join("\n");
-    }
+    },
   );
 
   return `${red(
-    "Errors found while parsing environment:"
+    "Errors found while parsing environment:",
   )}\n${formattedErrors.join("\n\n")}\n`;
 }

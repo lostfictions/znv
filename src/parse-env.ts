@@ -12,7 +12,7 @@ export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
 >;
 
 export type DetailedSpec<
-  TSchema extends SimpleSchema = SimpleSchema<unknown, unknown>
+  TSchema extends SimpleSchema = SimpleSchema<unknown, unknown>,
 > = TSchema extends SimpleSchema<any, infer TIn>
   ? {
       /**
@@ -78,7 +78,7 @@ export type ParsedSchema<T extends Schemas> = T extends any
  */
 export function resolveDefaultValueForSpec<TIn = unknown>(
   defaults: Record<string, TIn> | undefined,
-  nodeEnv: string | undefined
+  nodeEnv: string | undefined,
 ): [hasDefault: boolean, defaultValue: TIn | undefined] {
   if (defaults) {
     if (
@@ -97,7 +97,7 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
  * parameter unchanged, but with the same inference used in `parseEnv` applied.
  */
 export const inferSchemas = <T extends Schemas>(
-  schemas: T & RestrictSchemas<T>
+  schemas: T & RestrictSchemas<T>,
 ): T & RestrictSchemas<T> => schemas;
 
 /**
@@ -106,7 +106,7 @@ export const inferSchemas = <T extends Schemas>(
  */
 export function parseEnv<T extends Schemas>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>
+  schemas: T & RestrictSchemas<T>,
 ): DeepReadonlyObject<ParsedSchema<T>> {
   const parsed: Record<string, unknown> = {} as any;
 
@@ -134,13 +134,13 @@ export function parseEnv<T extends Schemas>(
         } else {
           parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(
             envValue,
-            { errorMap }
+            { errorMap },
           );
         }
       } else if (envValue == null) {
         [defaultUsed, defaultValue] = resolveDefaultValueForSpec(
           schemaOrSpec.defaults,
-          env["NODE_ENV"]
+          env["NODE_ENV"],
         );
 
         if (defaultUsed) {
@@ -152,13 +152,13 @@ export function parseEnv<T extends Schemas>(
           // `null` for us).
           parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
             envValue,
-            { errorMap }
+            { errorMap },
           );
         }
       } else {
         parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
           envValue,
-          { errorMap }
+          { errorMap },
         );
       }
     } catch (e) {
