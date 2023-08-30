@@ -39,7 +39,11 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/ && find ./dist-cjs -type f ! -iname \"package.json\" -delete && tsc && tsc --project tsconfig.cjs.build.json",
+    "build": "run-s -l build:*",
+    "build:clean": "rm -rf dist/ dist-cjs/",
+    "build:mjs": "tsc --project tsconfig.build.json",
+    "build:cjs": "tsc --project tsconfig.cjs.build.json",
+    "build:copy": "cp package.cjs.json dist-cjs/package.json",
     "test": "run-p -cl test:*",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
