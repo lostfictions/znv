@@ -33,7 +33,14 @@ export function reportErrors(
 ): string {
   const formattedErrors = errors.map(
     ({ key, receivedValue, error, defaultUsed, defaultValue }) => {
-      const message: string[] = [`[${yellow(key)}]:`];
+      let title = `[${yellow(key)}]:`;
+
+      const desc = schemas[key]?.description;
+      if (desc) {
+        title += ` ${desc}`;
+      }
+
+      const message: string[] = [title];
 
       if (error instanceof ZodError) {
         const { formErrors, fieldErrors } = error.flatten();
@@ -77,14 +84,6 @@ export function reportErrors(
             )})`,
             2,
           ),
-        );
-      }
-
-      const desc = schemas[key]?.description;
-      if (desc) {
-        message.push("");
-        message.push(
-          `Description of [${yellow(key)}]: ${schemas[key]!.description}`,
         );
       }
 
