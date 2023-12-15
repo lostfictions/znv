@@ -1,12 +1,12 @@
 import { ZodError, ZodErrorMap, ZodIssueCode } from "zod";
-import { yellow, red, cyan, green } from "./tty-colors.js";
-import { Schemas } from "./parse-env.js";
+import { yellow, red, cyan, green } from "./util/tty-colors.js";
+import type { Schemas } from "./parse-env.js";
 
 // Even though we also have our own formatter, we pass a custom error map to
 // Zod's `.parse()` for two reasons:
 // - to ensure that no other consumer of zod in the codebase has set a default
 //   error map that might override our formatting
-// - to return slightly friendly error messages in some common scenarios.
+// - to return slightly friendlier error messages in some common scenarios.
 export const errorMap: ZodErrorMap = (issue, ctx) => {
   if (
     issue.code === ZodIssueCode.invalid_type &&

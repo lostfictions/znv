@@ -43,6 +43,8 @@ about final API design are welcome.
 ```bash
 npm i znv zod
 # or
+pnpm add znv zod
+# or
 yarn add znv zod
 ```
 

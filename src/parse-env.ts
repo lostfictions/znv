@@ -1,9 +1,9 @@
 import * as z from "zod";
 
 import { getSchemaWithPreprocessor } from "./preprocessors.js";
-import { ErrorWithContext, reportErrors, errorMap } from "./reporter.js";
+import { type ErrorWithContext, reportErrors, errorMap } from "./reporter.js";
 
-import type { DeepReadonlyObject } from "./util.js";
+import type { DeepReadonlyObject } from "./util/type-helpers.js";
 
 export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
   TOut,
@@ -102,7 +102,7 @@ export const inferSchemas = <T extends Schemas>(
 
 /**
  * Parses the passed environment object using the provided map of Zod schemas
- * and returns the immutably-typed, parsed environment..
+ * and returns the immutably-typed, parsed environment.
  */
 export function parseEnv<T extends Schemas>(
   env: Record<string, string | undefined>,
