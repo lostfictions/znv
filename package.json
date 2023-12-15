@@ -2,16 +2,13 @@
   "name": "znv",
   "version": "0.4.0",
   "description": "Parse your environment with Zod schemas",
-  "type": "module",
+  "license": "MIT",
   "keywords": [
     "env",
     "process.env",
     "zod",
     "validation"
   ],
-  "main": "dist-cjs/index.js",
-  "types": "dist/index.d.ts",
-  "module": "dist/index.js",
   "author": "s <https://github.com/lostfictions>",
   "homepage": "https://github.com/lostfictions/znv",
   "repository": {
@@ -21,6 +18,10 @@
   "bugs": {
     "url": "https://github.com/lostfictions/znv/issues"
   },
+  "type": "module",
+  "main": "dist-cjs/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
   "files": [
     "dist/",
     "dist-cjs/"
@@ -37,7 +38,6 @@
       }
     }
   },
-  "license": "MIT",
   "scripts": {
     "build": "run-s -l build:*",
     "build:clean": "rm -rf dist/ dist-cjs/",
