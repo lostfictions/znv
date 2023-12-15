@@ -53,9 +53,6 @@
     "jest": "jest --colors --watch",
     "prepublishOnly": "run-s -l test build"
   },
-  "dependencies": {
-    "colorette": "^2.0.19"
-  },
   "peerDependencies": {
     "zod": "^3.13.2"
   },
