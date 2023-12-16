@@ -58,28 +58,23 @@ const replaceClose = (
 ): string =>
   head + (next < 0 ? tail : replaceClose(next, tail, close, replace));
 
-const clearBleed = (
-  index: number,
-  str: string,
-  open: string,
-  close: string,
-  replace: string,
-) =>
+const clearBleed = (index: number, str: string, open: string, close: string) =>
   index < 0
     ? open + str + close
-    : open + replaceClose(index, str, close, replace) + close;
+    : open + replaceClose(index, str, close, open) + close;
 
-const filterEmpty =
-  (open: string, close: string, replace = open, at = open.length + 1) =>
-  (str: string) =>
-    str || !(str === "" || str === undefined)
-      ? clearBleed(String(str).indexOf(close, at), str, open, close, replace)
-      : "";
+const filterEmpty = (open: string, close: string) => (str: unknown) =>
+  str || !(str === "" || str === undefined)
+    ? clearBleed(
+        String(str).indexOf(close, open.length + 1),
+        String(str),
+        open,
+        close,
+      )
+    : "";
 
-const create = (open: number, close: number, replace?: string) =>
-  isColorSupported
-    ? filterEmpty(`\x1b[${open}m`, `\x1b[${close}m`, replace)
-    : String;
+const create = (open: number, close: number) =>
+  isColorSupported ? filterEmpty(`\x1b[${open}m`, `\x1b[${close}m`) : String;
 
 export const red = create(31, 39);
 export const green = create(32, 39);
