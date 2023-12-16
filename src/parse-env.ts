@@ -115,6 +115,11 @@ export type ParseEnv = <T extends Schemas>(
 /**
  * Parses the passed environment object using the provided map of Zod schemas
  * and returns the immutably-typed, parsed environment.
+ *
+ * This version of `parseEnv` is intended for internal use and requires a
+ * reporter or token formatters to be passed in. The versions exported in
+ * `index.js` and `compat.js` provide defaults for this third parameter, making
+ * it optional.
  */
 export function parseEnvImpl<T extends Schemas>(
   env: Record<string, string | undefined>,

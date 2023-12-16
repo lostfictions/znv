@@ -17,10 +17,15 @@ export const errorMap: ZodErrorMap = (issue, ctx) => {
 };
 
 export interface ErrorWithContext {
+  /** The env var name. */
   key: string;
+  /** The actual value present in `process.env[key]`, or undefined. */
   receivedValue: unknown;
+  /** `ZodError` if Zod parsing failed, or `Error` if a preprocessor threw. */
   error: unknown;
+  /** If a default was provided, whether the default value was used. */
   defaultUsed: boolean;
+  /** If a default was provided, the given default value. */
   defaultValue: unknown;
 }
 
