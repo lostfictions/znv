@@ -36,6 +36,16 @@
         "types": "./dist-cjs/index.d.ts",
         "default": "./dist-cjs/index.js"
       }
+    },
+    "./compat": {
+      "import": {
+        "types": "./dist/compat.d.ts",
+        "default": "./dist/compat.js"
+      },
+      "require": {
+        "types": "./dist-cjs/compat.d.ts",
+        "default": "./dist-cjs/compat.js"
+      }
     }
   },
   "scripts": {

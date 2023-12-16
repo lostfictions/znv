@@ -1,7 +1,13 @@
 import * as z from "zod";
 
 import { getSchemaWithPreprocessor } from "./preprocessors.js";
-import { type ErrorWithContext, reportErrors, errorMap } from "./reporter.js";
+import {
+  makeDefaultReporter,
+  errorMap,
+  type TokenFormatters,
+  type ErrorWithContext,
+  type Reporter,
+} from "./reporter.js";
 
 import type { DeepReadonlyObject } from "./util/type-helpers.js";
 
@@ -100,14 +106,26 @@ export const inferSchemas = <T extends Schemas>(
   schemas: T & RestrictSchemas<T>,
 ): T & RestrictSchemas<T> => schemas;
 
+export type ParseEnv = <T extends Schemas>(
+  env: Record<string, string | undefined>,
+  schemas: T & RestrictSchemas<T>,
+  reporterOrTokenFormatters?: Reporter | TokenFormatters,
+) => DeepReadonlyObject<ParsedSchema<T>>;
+
 /**
  * Parses the passed environment object using the provided map of Zod schemas
  * and returns the immutably-typed, parsed environment.
  */
-export function parseEnv<T extends Schemas>(
+export function parseEnvImpl<T extends Schemas>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>,
+  schemas: T,
+  reporterOrTokenFormatters: Reporter | TokenFormatters,
 ): DeepReadonlyObject<ParsedSchema<T>> {
+  const reporter =
+    typeof reporterOrTokenFormatters === "function"
+      ? reporterOrTokenFormatters
+      : makeDefaultReporter(reporterOrTokenFormatters);
+
   const parsed: Record<string, unknown> = {} as any;
 
   const errors: ErrorWithContext[] = [];
@@ -173,7 +191,7 @@ export function parseEnv<T extends Schemas>(
   }
 
   if (errors.length > 0) {
-    throw new Error(reportErrors(errors, schemas));
+    throw new Error(reporter(errors, schemas));
   }
 
   return parsed as DeepReadonlyObject<ParsedSchema<T>>;
