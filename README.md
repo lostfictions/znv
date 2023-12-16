@@ -174,7 +174,7 @@ facilitates its use for environment validation.
 ### What does znv actually do?
 
 znv is a small module that works hand-in-hand with Zod. Since env vars, when
-defined, are always strings, Zod schemas like `z.number()` will fail to parse
+defined, are _always strings_, Zod schemas like `z.number()` will fail to parse
 them out-of-the-box. Zod allows you to use a [`preprocess`
 schema](https://github.com/colinhacks/zod#preprocess) to handle coercions, but
 peppering your schemas with preprocessors to this end is verbose, error-prone,
@@ -185,6 +185,13 @@ These preprocessors don't do any validation of their own — in fact, they try t
 do as little work as possible and defer to your schema to handle the validation.
 In practice, this should be pretty much transparent to you, but you can check
 out the [coercion rules](#coercion-rules) if you'd like more info.
+
+> Since `v3.20`, Zod provides
+> [`z.coerce`](https://github.com/colinhacks/zod#coercion-for-primitives) for
+> primitive coercion, but this is often too naive to be useful. For example,
+> `z.coerce.boolean()` will parse "false" into `true`, since the string "false"
+> is _truthy_ in JavaScript. znv will coerce "false" into `false`, which is
+> probably what you expect.
 
 znv also makes it easy to define defaults for env vars based on your
 environment. Zod allows you to add a default value for a schema, but making a
@@ -363,11 +370,11 @@ Some notable coercion mechanics:
 
 - If your schema's input is a Date, znv will call `new Date()` with the input
   value. This has a number of pitfalls, since the `Date()` constructor is
-  excessively forgiving. The value is passed in as a string, which means trying
-  to pass a Unix epoch will yield unexpected results. (Epochs need to be passed
-  in as `number`: `new Date()` with an epoch as a string will either give you
-  `invalid date` or a completely nonsensical date.) _You should only pass in ISO
-  8601 date strings_, such as those returned by
+  excessively forgiving. The value is passed in as a string, which means
+  **trying to pass a Unix epoch will yield unexpected results**. (Epochs need to
+  be passed in as `number`: `new Date()` with an epoch as a string will either
+  give you `invalid date` or a completely nonsensical date.) _You should only
+  pass in ISO 8601 date strings_, such as those returned by
   [`Date.prototype.toISOString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString).
   Improved validation for Date schemas could be added in a future version.
 
@@ -400,6 +407,21 @@ Joi is the Cadillac of schema validation libraries. Its default of coercing
 strings to the target type makes it easy to adopt for environment validation.
 Unfortunately, Joi is written in JavaScript and its type definitions support a
 very limited form of inference when they work at all.
+
+### [Zod](https://github.com/colinhacks/zod)
+
+Hey, what's Zod doing here? Doesn't znv use Zod?
+
+If you just want to parse some values against a certain schema, **you might not
+need znv**. Just use Zod directly.
+
+znv is best-suited for _environment validation_: it automatically wraps your Zod
+schemas in preprocessors that coerce env vars, which are always strings, into
+the appropriate type. This is different from Zod's built-in `z.coerce`, which is
+often too naive to be useful. For example, `z.coerce.boolean()` will parse
+"false" into `true`, since the string "false" is _truthy_ in JavaScript. znv
+will coerce "false" into `false`, which is probably what you expect. Check the
+section on [coercion rules](#coercion-rules) for more information.
 
 ## Complementary tooling
 
