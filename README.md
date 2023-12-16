@@ -18,6 +18,12 @@ optionally provide defaults (which can be matched against `NODE_ENV` values like
 `production` or `development`), as well as help strings that will be included in
 the error thrown when an env var is missing.
 
+## Features
+
+- No dependencies
+- Fully type-safe
+- Compatible with serverless environments (import `znv/compat` instead of `znv`)
+
 ## Status
 
 Unstable: znv has not yet hit v1.0.0, and per semver there may be breaking
@@ -31,7 +37,7 @@ about final API design are welcome.
 - [Quickstart](#quickstart)
 - [Motivation](#motivation)
 - [Usage](#usage)
-  - [`parseEnv`](#parseenvenvironment-schemas)
+  - [`parseEnv`](#parseenvenvironment-schemas-reporterOrFormatters)
   - [Extra schemas](#extra-schemas)
 - [Coercion rules](#coercion-rules)
 - [Comparison to other libraries](#comparison-to-other-libraries)
@@ -202,7 +208,7 @@ environments is not straightforward.
 
 ## Usage
 
-### `parseEnv(environment, schemas)`
+### `parseEnv(environment, schemas, reporterOrFormatters?)`
 
 Parse the given `environment` using the given `schemas`. Returns a read-only
 object that maps the keys of the `schemas` object to their respective parsed
@@ -210,6 +216,13 @@ values.
 
 Throws if any schema fails to parse its respective env var. The error aggregates
 all parsing failures for the schemas.
+
+Optionally, you can pass a custom error reporter as the third parameter to
+`parseEnv` to customize how errors are displayed. The reporter is a function
+that receives error details and returns a `string`. Alternately, you can pass an
+object of _token formatters_ as the third parameter to `parseEnv`; this can be
+useful if you want to retain the default error reporting format but want to
+customize some aspects of it (for example, by redacting secrets).
 
 #### `environment: Record<string, string | undefined>`
 
@@ -309,6 +322,66 @@ pass a `DetailedSpec` object that has the following fields:
   example, you could use
   `NODE_ENV: z.enum(["production", "development", "test", "ci"])` to enforce
   that `NODE_ENV` is always defined and is one of those four expected values.
+
+#### `reporterOrFormatters?: Reporter | TokenFormatters`
+
+An optional error reporter or object of error token formatters, for customizing
+the displayed output when a validation error occurs.
+
+- `Reporter: (errors: ErrorWithContext[], schemas: Schemas) => string`
+
+  A reporter is a function that takes a list of errors and the schemas you
+  passed to `parseEnv` and returns a `string`. Each error has the following
+  format:
+
+  ```ts
+  {
+    /** The env var name. */
+    key: string;
+    /** The actual value present in `process.env[key]`, or undefined. */
+    receivedValue: unknown;
+    /** `ZodError` if Zod parsing failed, or `Error` if a preprocessor threw. */
+    error: unknown;
+    /** If a default was provided, whether the default value was used. */
+    defaultUsed: boolean;
+    /** If a default was provided, the given default value. */
+    defaultValue: unknown;
+  }
+  ```
+
+- `TokenFormatters`
+
+  An object with the following structure:
+
+  ```ts
+    {
+    /** Formatter for the env var name. */
+    formatVarName?: (key: string) => string;
+
+    /** For parsed objects with errors, formatter for object keys. */
+    formatObjKey?: (key: string) => string;
+
+    /** Formatter for the actual value we received for the env var. */
+    formatReceivedValue?: (val: unknown) => string;
+
+    /** Formatter for the default value provided for the schema. */
+    formatDefaultValue?: (val: unknown) => string;
+
+    /** Formatter for the error summary header. */
+    formatHeader?: (header: string) => string;
+  }
+  ```
+
+  For example, if you want to redact value names, you can invoke `parseEnv` like
+  this:
+
+  ```ts
+  export const { SOME_VAL } = parseEnv(
+    process.env,
+    { SOME_VAL: z.number().nonnegative() },
+    { formatReceivedValue: () => "<redacted>" },
+  );
+  ```
 
 ### Extra schemas
 
