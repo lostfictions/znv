@@ -105,7 +105,9 @@ export function parseEnv<T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
   schemas: T,
 ): DeepReadonlyObject<ParsedSchema<T>> {
-  const parsed: Record<string, unknown> = {} as any;
+  const parsed: Record<string, unknown> = {} as DeepReadonlyObject<
+    ParsedSchema<T>
+  >;
 
   const errors: ErrorWithContext[] = [];
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-assignment */
 import * as z from "zod";
 
 import { assertNever } from "./util.js";
@@ -86,6 +87,7 @@ export function getPreprocessorByZodType(
         // "expected x, got string"). in the future `getPreprocessor` could
         // maybe be refined to return a result type instead, but let's not
         // overengineer things for now.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return JSON.parse(arg);
       };
 
