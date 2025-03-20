@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as z from "zod";
 
 import { parseEnv } from "./parse-env.js";
@@ -468,8 +469,8 @@ describe("parseCore", () => {
               .number()
               .int()
               .transform((n) => String(n)),
-            // @ts-expect-error (2322) -- should be number
             defaults: {
+              // @ts-expect-error (2322) -- should be number
               _: new Map(),
             },
             // @ts-expect-error (2322) -- excess properties should be checked

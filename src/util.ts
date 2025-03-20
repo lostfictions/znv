@@ -4,7 +4,7 @@ export function assertNever(value: never): never {
 
 type primitive = string | number | boolean | undefined | null;
 
-export type DeepReadonlyArray<T> = ReadonlyArray<DeepReadonly<T>>;
+export type DeepReadonlyArray<T> = readonly DeepReadonly<T>[];
 
 export type DeepReadonlyObject<T> = {
   readonly [P in keyof T]: DeepReadonly<T[P]>;
@@ -12,6 +12,6 @@ export type DeepReadonlyObject<T> = {
 
 export type DeepReadonly<T> = T extends primitive
   ? T
-  : T extends Array<infer U>
+  : T extends (infer U)[]
   ? DeepReadonlyArray<U>
   : DeepReadonlyObject<T>;
