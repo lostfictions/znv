@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es2021",
+    "target": "ES2022",
     "lib": [
-      "ES2021"
+      "ES2022"
     ],
     "module": "Node16",
-    "moduleResolution": "Node16",
+    "moduleResolution": "node16",
     "outDir": "dist",
     "strict": true,
     "declaration": true,

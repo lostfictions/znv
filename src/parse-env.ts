@@ -81,10 +81,7 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
   nodeEnv: string | undefined,
 ): [hasDefault: boolean, defaultValue: TIn | undefined] {
   if (defaults) {
-    if (
-      nodeEnv != null &&
-      Object.prototype.hasOwnProperty.call(defaults, nodeEnv)
-    ) {
+    if (nodeEnv != null && Object.hasOwn(defaults, nodeEnv)) {
       return [true, defaults[nodeEnv]];
     }
     if ("_" in defaults) return [true, defaults["_"]];
@@ -104,9 +101,9 @@ export const inferSchemas = <T extends Schemas>(
  * Parses the passed environment object using the provided map of Zod schemas
  * and returns the immutably-typed, parsed environment..
  */
-export function parseEnv<T extends Schemas>(
+export function parseEnv<T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>,
+  schemas: T,
 ): DeepReadonlyObject<ParsedSchema<T>> {
   const parsed: Record<string, unknown> = {} as any;
 
