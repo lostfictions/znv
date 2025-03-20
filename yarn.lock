@@ -1741,7 +1741,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:8.27.0":
+"@typescript-eslint/utils@npm:8.27.0, @typescript-eslint/utils@npm:^8.27.0":
   version: 8.27.0
   resolution: "@typescript-eslint/utils@npm:8.27.0"
   dependencies:
@@ -8471,6 +8471,7 @@ __metadata:
   dependencies:
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.13.10"
+    "@typescript-eslint/utils": "npm:^8.27.0"
     colorette: "npm:^2.0.19"
     eslint: "npm:^9.22.0"
     eslint-config-lostfictions: "npm:^7.0.0-beta.0"
