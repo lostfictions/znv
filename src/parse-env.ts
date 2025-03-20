@@ -93,8 +93,8 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
  * Mostly an internal convenience function for testing. Returns the input
  * parameter unchanged, but with the same inference used in `parseEnv` applied.
  */
-export const inferSchemas = <T extends Schemas>(
-  schemas: T & RestrictSchemas<T>,
+export const inferSchemas = <T extends Schemas & RestrictSchemas<T>>(
+  schemas: T,
 ): T & RestrictSchemas<T> => schemas;
 
 /**
