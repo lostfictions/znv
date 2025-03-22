@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as z from "zod";
 
 import { parseEnv } from "./parse-env.js";
