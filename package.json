@@ -59,6 +59,7 @@
     "test:eslint": "eslint --color src",
     "test:jest": "jest --colors",
     "test:prettier": "prettier -l \"src/**/*\"",
+    "test:attw": "attw . --pack --profile node16",
     "prettier": "prettier \"src/**/*\" --write",
     "jest": "jest --colors --watch",
     "prepublishOnly": "run-s -l test build"
