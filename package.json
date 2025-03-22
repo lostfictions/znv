@@ -72,6 +72,7 @@
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
+    "@arethetypeswrong/cli": "^0.17.4",
     "zod": "^3.24.2"
   },
   "jest": {
