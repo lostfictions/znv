@@ -7,10 +7,3 @@ yarn-error.log*
 
 /dist
 /dist-cjs
-
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions

@@ -13,36 +13,37 @@ export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
 
 export type DetailedSpec<
   TSchema extends SimpleSchema = SimpleSchema<unknown, unknown>,
-> = TSchema extends SimpleSchema<any, infer TIn>
-  ? {
-      /**
-       * The Zod schema that will be used to parse the passed environment value
-       * (or any provided default).
-       */
-      schema: TSchema;
+> =
+  TSchema extends SimpleSchema<any, infer TIn>
+    ? {
+        /**
+         * The Zod schema that will be used to parse the passed environment value
+         * (or any provided default).
+         */
+        schema: TSchema;
 
-      /**
-       * A description of this env var that's provided as help text if the
-       * passed value fails validation, or is required but missing.
-       */
-      description?: string;
+        /**
+         * A description of this env var that's provided as help text if the
+         * passed value fails validation, or is required but missing.
+         */
+        description?: string;
 
-      /**
-       * An object that maps `NODE_ENV` values to default values to pass to the
-       * schema for this var when the var isn't defined in the environment. For
-       * example, you could specify `{ production: "my.cool.website",
-       * development: "localhost:9021" }` to use a local hostname in
-       * development.
-       *
-       * A special key for this object is `_`, which means "the default when
-       * `NODE_ENV` isn't defined or doesn't match any other provided default."
-       *
-       * You can also use `.default()` in a Zod schema to provide a default.
-       * (For example, `z.number().gte(20).default(50)`.)
-       */
-      defaults?: Record<string, TIn | undefined>;
-    }
-  : never;
+        /**
+         * An object that maps `NODE_ENV` values to default values to pass to the
+         * schema for this var when the var isn't defined in the environment. For
+         * example, you could specify `{ production: "my.cool.website",
+         * development: "localhost:9021" }` to use a local hostname in
+         * development.
+         *
+         * A special key for this object is `_`, which means "the default when
+         * `NODE_ENV` isn't defined or doesn't match any other provided default."
+         *
+         * You can also use `.default()` in a Zod schema to provide a default.
+         * (For example, `z.number().gte(20).default(50)`.)
+         */
+        defaults?: Record<string, TIn | undefined>;
+      }
+    : never;
 
 export type Schemas = Record<string, SimpleSchema | DetailedSpec>;
 
@@ -55,9 +56,9 @@ export type RestrictSchemas<T extends Schemas> = {
   [K in keyof T]: T[K] extends SimpleSchema
     ? SimpleSchema
     : T[K] extends DetailedSpec
-    ? DetailedSpec<T[K]["schema"]> &
-        Omit<Record<keyof T[K], never>, DetailedSpecKeys>
-    : never;
+      ? DetailedSpec<T[K]["schema"]> &
+          Omit<Record<keyof T[K], never>, DetailedSpecKeys>
+      : never;
 };
 
 export type ParsedSchema<T extends Schemas> = T extends any
@@ -65,10 +66,10 @@ export type ParsedSchema<T extends Schemas> = T extends any
       [K in keyof T]: T[K] extends SimpleSchema<infer TOut>
         ? TOut
         : T[K] extends DetailedSpec
-        ? T[K]["schema"] extends SimpleSchema<infer TOut>
-          ? TOut
-          : never
-        : never;
+          ? T[K]["schema"] extends SimpleSchema<infer TOut>
+            ? TOut
+            : never
+          : never;
     }
   : never;
 
