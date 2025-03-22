@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { assertNever } from "./util.js";
+import { assertNever } from "./util/type-helpers.js";
 
 const { ZodFirstPartyTypeKind: TypeName } = z;
 
