@@ -148,7 +148,7 @@ export const { API_SERVER, HOST, PORT, EDITORS, POST_LIMIT, AUTH_SERVER } =
       .enum(["prod", "staging"])
       .optional()
       .transform((prefix) =>
-        prefix ? `http://auth-${prefix}.cool-llama.app` : "http://localhost:91"
+        prefix ? `http://auth-${prefix}.cool-llama.app` : "http://localhost:91",
       ),
   });
 ```
@@ -500,8 +500,8 @@ section on [coercion rules](#coercion-rules) for more information.
 
 ## Complementary tooling
 
-The [eslint-plugin-node](https://github.com/mysticatea/eslint-plugin-node) rule
-[`no-process-env`](https://github.com/mysticatea/eslint-plugin-node/blob/master/docs/rules/no-process-env.md)
+The [eslint-plugin-n](https://github.com/eslint-community/eslint-plugin-n) rule
+[`no-process-env`](https://github.com/eslint-community/eslint-plugin-n/blob/master/docs/rules/no-process-env.md)
 is recommended to restrict usage of `process.env` outside of the module that
 parses your schema.
 
