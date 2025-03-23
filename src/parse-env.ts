@@ -1,9 +1,15 @@
 import * as z from "zod";
 
 import { getSchemaWithPreprocessor } from "./preprocessors.js";
-import { ErrorWithContext, reportErrors, errorMap } from "./reporter.js";
+import {
+  makeDefaultReporter,
+  errorMap,
+  type TokenFormatters,
+  type ErrorWithContext,
+  type Reporter,
+} from "./reporter.js";
 
-import type { DeepReadonlyObject } from "./util.js";
+import type { DeepReadonlyObject } from "./util/type-helpers.js";
 
 export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
   TOut,
@@ -98,14 +104,31 @@ export const inferSchemas = <T extends Schemas & RestrictSchemas<T>>(
   schemas: T,
 ): T & RestrictSchemas<T> => schemas;
 
+export type ParseEnv = <T extends Schemas>(
+  env: Record<string, string | undefined>,
+  schemas: T & RestrictSchemas<T>,
+  reporterOrTokenFormatters?: Reporter | TokenFormatters,
+) => DeepReadonlyObject<ParsedSchema<T>>;
+
 /**
  * Parses the passed environment object using the provided map of Zod schemas
- * and returns the immutably-typed, parsed environment..
+ * and returns the immutably-typed, parsed environment.
+ *
+ * This version of `parseEnv` is intended for internal use and requires a
+ * reporter or token formatters to be passed in. The versions exported in
+ * `index.js` and `compat.js` provide defaults for this third parameter, making
+ * it optional.
  */
-export function parseEnv<T extends Schemas & RestrictSchemas<T>>(
+export function parseEnvImpl<T extends Schemas>(
   env: Record<string, string | undefined>,
   schemas: T,
+  reporterOrTokenFormatters: Reporter | TokenFormatters,
 ): DeepReadonlyObject<ParsedSchema<T>> {
+  const reporter =
+    typeof reporterOrTokenFormatters === "function"
+      ? reporterOrTokenFormatters
+      : makeDefaultReporter(reporterOrTokenFormatters);
+
   const parsed: Record<string, unknown> = {} as DeepReadonlyObject<
     ParsedSchema<T>
   >;
@@ -173,7 +196,7 @@ export function parseEnv<T extends Schemas & RestrictSchemas<T>>(
   }
 
   if (errors.length > 0) {
-    throw new Error(reportErrors(errors, schemas));
+    throw new Error(reporter(errors, schemas));
   }
 
   return parsed as DeepReadonlyObject<ParsedSchema<T>>;
