@@ -104,9 +104,9 @@ export const inferSchemas = <T extends Schemas & RestrictSchemas<T>>(
   schemas: T,
 ): T & RestrictSchemas<T> => schemas;
 
-export type ParseEnv = <T extends Schemas>(
+export type ParseEnv = <T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>,
+  schemas: T,
   reporterOrTokenFormatters?: Reporter | TokenFormatters,
 ) => DeepReadonlyObject<ParsedSchema<T>>;
 
@@ -119,7 +119,7 @@ export type ParseEnv = <T extends Schemas>(
  * `index.js` and `compat.js` provide defaults for this third parameter, making
  * it optional.
  */
-export function parseEnvImpl<T extends Schemas>(
+export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
   schemas: T,
   reporterOrTokenFormatters: Reporter | TokenFormatters,
