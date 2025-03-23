@@ -151,6 +151,7 @@ export function getPreprocessorByZodType(
         return arg;
       };
 
+    case TypeName.ZodDiscriminatedUnion:
     case TypeName.ZodUnion:
     case TypeName.ZodNativeEnum:
       throw new Error(
@@ -178,6 +179,11 @@ export function getPreprocessorByZodType(
     case TypeName.ZodMap:
     case TypeName.ZodSet:
     case TypeName.ZodNaN:
+    case TypeName.ZodCatch:
+    case TypeName.ZodBranded:
+    case TypeName.ZodPipeline:
+    case TypeName.ZodSymbol:
+    case TypeName.ZodReadonly:
       throw new Error(`Zod type not supported: ${typeName}`);
 
     default: {

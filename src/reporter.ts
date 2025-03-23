@@ -87,7 +87,9 @@ export function reportErrors(
           message.push(indent("Errors on object keys:", 2));
           for (const [objKey, keyErrors] of fieldErrorEntries) {
             message.push(indent(`[${formatObjKey(objKey)}]:`, 4));
-            for (const fe of keyErrors) message.push(indent(fe, 6));
+            if (keyErrors) {
+              for (const fe of keyErrors) message.push(indent(fe, 6));
+            }
           }
         }
       } else if (error instanceof Error) {

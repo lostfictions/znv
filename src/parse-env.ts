@@ -19,36 +19,37 @@ export type SimpleSchema<TOut = any, TIn = any> = z.ZodType<
 
 export type DetailedSpec<
   TSchema extends SimpleSchema = SimpleSchema<unknown, unknown>,
-> = TSchema extends SimpleSchema<any, infer TIn>
-  ? {
-      /**
-       * The Zod schema that will be used to parse the passed environment value
-       * (or any provided default).
-       */
-      schema: TSchema;
+> =
+  TSchema extends SimpleSchema<any, infer TIn>
+    ? {
+        /**
+         * The Zod schema that will be used to parse the passed environment value
+         * (or any provided default).
+         */
+        schema: TSchema;
 
-      /**
-       * A description of this env var that's provided as help text if the
-       * passed value fails validation, or is required but missing.
-       */
-      description?: string;
+        /**
+         * A description of this env var that's provided as help text if the
+         * passed value fails validation, or is required but missing.
+         */
+        description?: string;
 
-      /**
-       * An object that maps `NODE_ENV` values to default values to pass to the
-       * schema for this var when the var isn't defined in the environment. For
-       * example, you could specify `{ production: "my.cool.website",
-       * development: "localhost:9021" }` to use a local hostname in
-       * development.
-       *
-       * A special key for this object is `_`, which means "the default when
-       * `NODE_ENV` isn't defined or doesn't match any other provided default."
-       *
-       * You can also use `.default()` in a Zod schema to provide a default.
-       * (For example, `z.number().gte(20).default(50)`.)
-       */
-      defaults?: Record<string, TIn | undefined>;
-    }
-  : never;
+        /**
+         * An object that maps `NODE_ENV` values to default values to pass to the
+         * schema for this var when the var isn't defined in the environment. For
+         * example, you could specify `{ production: "my.cool.website",
+         * development: "localhost:9021" }` to use a local hostname in
+         * development.
+         *
+         * A special key for this object is `_`, which means "the default when
+         * `NODE_ENV` isn't defined or doesn't match any other provided default."
+         *
+         * You can also use `.default()` in a Zod schema to provide a default.
+         * (For example, `z.number().gte(20).default(50)`.)
+         */
+        defaults?: Record<string, TIn | undefined>;
+      }
+    : never;
 
 export type Schemas = Record<string, SimpleSchema | DetailedSpec>;
 
@@ -87,10 +88,7 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
   nodeEnv: string | undefined,
 ): [hasDefault: boolean, defaultValue: TIn | undefined] {
   if (defaults) {
-    if (
-      nodeEnv != null &&
-      Object.prototype.hasOwnProperty.call(defaults, nodeEnv)
-    ) {
+    if (nodeEnv != null && Object.hasOwn(defaults, nodeEnv)) {
       return [true, defaults[nodeEnv]];
     }
     if ("_" in defaults) return [true, defaults["_"]];
@@ -102,13 +100,13 @@ export function resolveDefaultValueForSpec<TIn = unknown>(
  * Mostly an internal convenience function for testing. Returns the input
  * parameter unchanged, but with the same inference used in `parseEnv` applied.
  */
-export const inferSchemas = <T extends Schemas>(
-  schemas: T & RestrictSchemas<T>,
+export const inferSchemas = <T extends Schemas & RestrictSchemas<T>>(
+  schemas: T,
 ): T & RestrictSchemas<T> => schemas;
 
-export type ParseEnv = <T extends Schemas>(
+export type ParseEnv = <T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
-  schemas: T & RestrictSchemas<T>,
+  schemas: T,
   reporterOrTokenFormatters?: Reporter | TokenFormatters,
 ) => DeepReadonlyObject<ParsedSchema<T>>;
 
@@ -121,7 +119,7 @@ export type ParseEnv = <T extends Schemas>(
  * `index.js` and `compat.js` provide defaults for this third parameter, making
  * it optional.
  */
-export function parseEnvImpl<T extends Schemas>(
+export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
   schemas: T,
   reporterOrTokenFormatters: Reporter | TokenFormatters,
@@ -131,7 +129,9 @@ export function parseEnvImpl<T extends Schemas>(
       ? reporterOrTokenFormatters
       : makeDefaultReporter(reporterOrTokenFormatters);
 
-  const parsed: Record<string, unknown> = {} as any;
+  const parsed: Record<string, unknown> = {} as DeepReadonlyObject<
+    ParsedSchema<T>
+  >;
 
   const errors: ErrorWithContext[] = [];
 
