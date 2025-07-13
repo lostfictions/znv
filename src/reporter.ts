@@ -1,4 +1,4 @@
-import { ZodError, ZodErrorMap, ZodIssueCode } from "zod";
+import { ZodError, ZodErrorMap, ZodIssueCode } from "zod/v3";
 import type { Schemas } from "./parse-env.js";
 
 // Even though we also have our own formatter, we pass a custom error map to

@@ -65,7 +65,7 @@
     "prepublishOnly": "run-s -l test build"
   },
   "peerDependencies": {
-    "zod": "^3.24.2"
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
@@ -79,7 +79,7 @@
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "zod": "~3.24.2"
+    "zod": "^4"
   },
   "jest": {
     "preset": "ts-jest/presets/default-esm",
@@ -100,5 +100,5 @@
       ]
     }
   },
-  "packageManager": "pnpm@10.6.5+sha512.cdf928fca20832cd59ec53826492b7dc25dc524d4370b6b4adbf65803d32efaa6c1c88147c0ae4e8d579a6c9eec715757b50d4fa35eea179d868eada4ed043af"
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
 }
