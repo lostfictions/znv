@@ -11,7 +11,7 @@ import {
   throwIfUnknown,
   throwIfCurrentlyUnsupported,
   throwIfWillNeverBeSupported,
-} from "./shared/processing.js";
+} from "./util/processing.js";
 import type * as zCore from "zod/v4/core";
 
 /**

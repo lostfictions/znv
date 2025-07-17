@@ -7,7 +7,6 @@ import {
   TokenFormatters,
   errorMap,
 } from "./reporter.js";
-import { resolveDefaultValueForSpec } from "./shared/utils.js";
 import type * as z from "zod";
 import type { DeepReadonlyObject } from "./util/type-helpers.js";
 
@@ -73,6 +72,31 @@ export type ParsedSchema<T extends Schemas> = T extends any
           : never;
     }
   : never;
+
+/**
+ * Since there might be a provided default value of `null` or `undefined`, we
+ * return a tuple that also indicates whether we found a default.
+ */
+export function resolveDefaultValueForSpec<TIn = unknown>(
+  defaults: Record<string, TIn> | undefined,
+  nodeEnv: string | undefined,
+): [hasDefault: boolean, defaultValue: TIn | undefined] {
+  if (defaults) {
+    if (nodeEnv != null && Object.hasOwn(defaults, nodeEnv)) {
+      return [true, defaults[nodeEnv]];
+    }
+    if ("_" in defaults) return [true, defaults["_"]];
+  }
+  return [false, undefined];
+}
+
+/**
+ * Mostly an internal convenience function for testing. Returns the input
+ * parameter unchanged, but with the same inference used in `parseEnv` applied.
+ */
+export const inferSchemas = <T extends Schemas & RestrictSchemas<T>>(
+  schemas: T,
+): T & RestrictSchemas<T> => schemas;
 
 export type ParseEnv = <T extends Schemas & RestrictSchemas<T>>(
   env: Record<string, string | undefined>,
