@@ -5,7 +5,6 @@ import {
   makeDefaultReporter,
   Reporter,
   TokenFormatters,
-  errorMap,
 } from "./reporter.js";
 import type * as z from "zod";
 import type { DeepReadonlyObject } from "./util/type-helpers.js";
@@ -147,13 +146,11 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
           //  we invoked the default getter and got 0.7, and then ran the parser
           //  against a missing env var and it generated another default of 0.4,
           //  we'd report a default value that _should_ have passed.)
-          parsed[key] = (spec.def.innerType as z.ZodType).parse(defaultValue, {
-            error: errorMap,
-          });
+          parsed[key] = (spec.def.innerType as z.ZodType).parse(defaultValue);
         } else {
           parsed[key] = getSchemaWithPreprocessor(
             schemaOrSpec as $ZodTypes,
-          ).parse(envValue, { error: errorMap });
+          ).parse(envValue);
         }
       } else if (envValue == null) {
         [defaultUsed, defaultValue] = resolveDefaultValueForSpec(
@@ -170,12 +167,12 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
           // `null` for us).
           parsed[key] = getSchemaWithPreprocessor(
             schemaOrSpec.schema as $ZodTypes,
-          ).parse(envValue, { error: errorMap });
+          ).parse(envValue);
         }
       } else {
         parsed[key] = getSchemaWithPreprocessor(
           schemaOrSpec.schema as $ZodTypes,
-        ).parse(envValue, { error: errorMap });
+        ).parse(envValue);
       }
     } catch (e) {
       errors.push({

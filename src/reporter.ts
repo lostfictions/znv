@@ -1,18 +1,6 @@
-import { $ZodError, $ZodRawIssue, $ZodErrorMap, toDotPath } from "zod/v4/core";
+import { $ZodError, toDotPath } from "zod/v4/core";
 import type { Schemas } from "./parse-env.js";
 import type * as z from "zod/v4";
-
-// Even though we also have our own formatter, we pass a custom error map to
-// Zod's `.parse()` for two reasons:
-// - to ensure that no other consumer of zod in the codebase has set a default
-//   error map that might override our formatting
-// - to return slightly friendlier error messages in some common scenarios.
-export const errorMap: $ZodErrorMap = (issue: $ZodRawIssue) => {
-  if (issue.code === "invalid_type" && issue.input === "undefined") {
-    return "This field is required.";
-  }
-  return undefined;
-};
 
 export interface ErrorWithContext {
   /** The env var name. */
