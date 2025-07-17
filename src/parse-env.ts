@@ -8,7 +8,7 @@ import {
   errorMap,
 } from "./reporter.js";
 import { resolveDefaultValueForSpec } from "./shared/utils.js";
-import type * as z from "zod/v4";
+import type * as z from "zod";
 import type { DeepReadonlyObject } from "./util/type-helpers.js";
 
 export type SimpleSchema<Out = any, In = any> = $ZodType<Out, In>;

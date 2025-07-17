@@ -1,4 +1,4 @@
-import * as z from "zod/v4";
+import * as z from "zod";
 import { assertNever } from "./util/type-helpers.js";
 import {
   bigInt,
