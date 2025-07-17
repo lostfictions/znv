@@ -1,19 +1,17 @@
-import { ZodError, ZodErrorMap, ZodIssueCode } from "zod/v3";
+import { $ZodError, $ZodRawIssue, $ZodErrorMap, toDotPath } from "zod/v4/core";
 import type { Schemas } from "./parse-env.js";
+import type * as z from "zod/v4";
 
 // Even though we also have our own formatter, we pass a custom error map to
 // Zod's `.parse()` for two reasons:
 // - to ensure that no other consumer of zod in the codebase has set a default
 //   error map that might override our formatting
 // - to return slightly friendlier error messages in some common scenarios.
-export const errorMap: ZodErrorMap = (issue, ctx) => {
-  if (
-    issue.code === ZodIssueCode.invalid_type &&
-    issue.received === "undefined"
-  ) {
-    return { message: "This field is required." };
+export const errorMap: $ZodErrorMap = (issue: $ZodRawIssue) => {
+  if (issue.code === "invalid_type" && issue.input === "undefined") {
+    return "This field is required.";
   }
-  return { message: ctx.defaultError };
+  return undefined;
 };
 
 export interface ErrorWithContext {
@@ -57,14 +55,37 @@ export function makeDefaultReporter(formatters: TokenFormatters) {
   return reporter;
 }
 
+// this is zod's `prettifyError`, but with formatting for the object path.
+function prettifyError(
+  error: $ZodError,
+  formatObjectPath: (string: string) => string = String,
+): string {
+  const lines: string[] = [];
+  // sort by path length
+  const issues = [...error.issues].sort(
+    (a, b) => a.path.length - b.path.length,
+  );
+
+  // Process each issue
+  for (const issue of issues) {
+    lines.push(`✖ ${issue.message}`);
+    if (issue.path?.length) {
+      lines.push(`→ at ${formatObjectPath(toDotPath(issue.path))}`);
+    }
+  }
+
+  // Convert Map to formatted string
+  return lines.map((l) => indent(l, 2)).join("\n");
+}
+
 export function reportErrors(
   errors: ErrorWithContext[],
   schemas: Schemas,
   {
     formatVarName = String,
-    formatObjKey = String,
     formatReceivedValue = String,
     formatDefaultValue = String,
+    formatObjKey = String,
     formatHeader = String,
   }: TokenFormatters = {},
 ): string {
@@ -72,26 +93,26 @@ export function reportErrors(
     ({ key, receivedValue, error, defaultUsed, defaultValue }) => {
       let title = `[${formatVarName(key)}]:`;
 
-      const desc = schemas[key]?.description;
+      const typeSchema = (
+        schemas[key] && "schema" in schemas[key]
+          ? schemas[key].schema
+          : schemas[key]
+      ) as z.ZodType;
+      const meta = typeSchema.meta();
+      const desc =
+        meta?.description ??
+        (schemas[key] && "description" in schemas[key]
+          ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+            schemas[key].description
+          : undefined);
       if (desc) {
         title += ` ${desc}`;
       }
 
       const message: string[] = [title];
 
-      if (error instanceof ZodError) {
-        const { formErrors, fieldErrors } = error.flatten();
-        for (const fe of formErrors) message.push(indent(fe, 2));
-        const fieldErrorEntries = Object.entries(fieldErrors);
-        if (fieldErrorEntries.length > 0) {
-          message.push(indent("Errors on object keys:", 2));
-          for (const [objKey, keyErrors] of fieldErrorEntries) {
-            message.push(indent(`[${formatObjKey(objKey)}]:`, 4));
-            if (keyErrors) {
-              for (const fe of keyErrors) message.push(indent(fe, 6));
-            }
-          }
-        }
+      if (error instanceof $ZodError) {
+        message.push(prettifyError(error, formatObjKey));
       } else if (error instanceof Error) {
         message.push(...error.message.split("\n").map((l) => indent(l, 2)));
       } else {
@@ -109,7 +130,7 @@ export function reportErrors(
               ? "undefined"
               : JSON.stringify(receivedValue),
           )})`,
-          2,
+          4,
         ),
       );
 
@@ -121,12 +142,12 @@ export function reportErrors(
                 ? "undefined"
                 : JSON.stringify(defaultValue),
             )})`,
-            2,
+            4,
           ),
         );
       }
 
-      return message.map((l) => indent(l, 2)).join("\n");
+      return message.join("\n");
     },
   );
 

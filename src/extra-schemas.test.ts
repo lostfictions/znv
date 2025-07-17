@@ -1,7 +1,7 @@
 import { parseEnv } from "./index.js";
 import { deprecate } from "./extra-schemas.js";
 
-describe("extra schemas v3", () => {
+describe("extra schemas", () => {
   describe("deprecate", () => {
     it("throws when a value is passed", () => {
       expect(() =>

@@ -1,8 +1,8 @@
-import * as z from "zod/v3";
+import * as z from "zod/v4";
 
 export const port = () => z.number().int().nonnegative().lte(65535);
 
 export const deprecate = () =>
   z
-    .undefined({ invalid_type_error: "This var is deprecated." })
+    .undefined({ error: "This var is deprecated." })
     .transform(() => undefined as never);
