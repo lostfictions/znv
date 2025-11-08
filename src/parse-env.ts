@@ -1,4 +1,4 @@
-import { $ZodType, $ZodDefault } from "zod/v4/core";
+import { $ZodType, $ZodDefault, $ZodError } from "zod/v4/core";
 import { getSchemaWithPreprocessor } from "./preprocessors.js";
 import {
   ErrorWithContext,
@@ -103,6 +103,20 @@ export type ParseEnv = <T extends Schemas & RestrictSchemas<T>>(
   reporterOrTokenFormatters?: Reporter | TokenFormatters,
 ) => DeepReadonlyObject<ParsedSchema<T>>;
 
+const handleDeprecation = (type: $ZodType) => {
+  if ((type as z.ZodType).meta()?.deprecated) {
+    throw new $ZodError([
+      {
+        code: "invalid_type",
+        message: "This var is deprecated.",
+        input: type,
+        path: [],
+        expected: "undefined",
+      },
+    ]);
+  }
+};
+
 /**
  * Parses the passed environment object using the provided map of Zod schemas
  * and returns the immutably-typed, parsed environment.
@@ -133,11 +147,16 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
     let defaultUsed = false;
     let defaultValue: unknown;
     try {
+      handleDeprecation(
+        "schema" in schemaOrSpec ? schemaOrSpec.schema : schemaOrSpec,
+      );
+
       if (schemaOrSpec instanceof $ZodType) {
         if (envValue == null && schemaOrSpec instanceof $ZodDefault) {
           defaultUsed = true;
           const spec = schemaOrSpec._zod;
           defaultValue = spec.def.defaultValue;
+
           // we "unwrap" the default value ourselves and pass it to the schema.
           // in the very unlikely case that the value isn't stable AND
           // validation fails, this ensures the default value we report is the
@@ -155,7 +174,6 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
           schemaOrSpec.defaults,
           env["NODE_ENV"],
         );
-
         if (defaultUsed) {
           parsed[key] = (schemaOrSpec.schema as z.ZodType).parse(defaultValue);
         } else {

@@ -75,17 +75,11 @@ export function getPreprocessorByZodType(
     case "literal":
       switch (typeof def.values?.[0]) {
         case "number":
-          return getPreprocessorByZodType({
-            _zod: { def: { type: "number" } },
-          } as zCore.$ZodTypes);
+          return getPreprocessorByZodType(z.number());
         case "string":
-          return getPreprocessorByZodType({
-            _zod: { def: { type: "string" } },
-          } as zCore.$ZodTypes);
+          return getPreprocessorByZodType(z.string());
         case "boolean":
-          return getPreprocessorByZodType({
-            _zod: { def: { type: "boolean" } },
-          } as zCore.$ZodTypes);
+          return getPreprocessorByZodType(z.boolean());
         default:
           return (arg) => arg;
       }
@@ -127,6 +121,7 @@ export function getPreprocessorByZodType(
     case "map":
     case "set":
     case "symbol":
+    case "function":
     case "readonly":
       throw new Error(
         `Zod type not yet supported: "${def.type}" (PRs welcome)`,

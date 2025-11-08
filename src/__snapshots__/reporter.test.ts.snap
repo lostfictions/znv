@@ -15,6 +15,14 @@ exports[`reporter should test the error output 1`] = `
   ✖ Invalid input: expected number, received string
     (received "bar")
 
+[DO_NOT_USE_LEGACY]:
+  ✖ This var is deprecated.
+    (received "this value shall not exist")
+
+[DO_NOT_USE_THIS_KEY]:
+  ✖ This var is deprecated.
+    (received "this value shall not exist")
+
 [SOME_WITH_DEPRECATED_DESCRIPTION]: Some description
   ✖ Invalid input: expected string, received undefined
     (received undefined)

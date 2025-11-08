@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseEnv, port } from "./compat.js";
+import { deprecate, parseEnv, port } from "./compat.js";
 
 describe("reporter", () => {
   it("should test the error output", () => {
@@ -8,7 +8,8 @@ describe("reporter", () => {
         {
           FOO: "bar",
           CONFIG_OBJECT: JSON.stringify({ a: 123, c: { d: 21 } }),
-          DO_NOT_USE_THIS_KEY: "this value might not exist",
+          DO_NOT_USE_THIS_KEY: "this value shall not exist",
+          DO_NOT_USE_LEGACY: "this value shall not exist",
         },
         {
           CONFIG_OBJECT: z
@@ -25,6 +26,7 @@ describe("reporter", () => {
             }),
           BLA: z.string().default("bar"),
           FOO: z.number(),
+          DO_NOT_USE_LEGACY: deprecate(),
           DO_NOT_USE_THIS_KEY: z.string().meta({
             deprecated: true,
           }),
