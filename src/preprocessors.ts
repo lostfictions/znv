@@ -8,9 +8,6 @@ import {
   json,
   nullProcessor,
   number,
-  throwIfUnknown,
-  throwIfCurrentlyUnsupported,
-  throwIfWillNeverBeSupported,
 } from "./util/processing.js";
 import type * as zCore from "zod/v4/core";
 
@@ -19,13 +16,16 @@ import type * as zCore from "zod/v4/core";
  * undefined!) to a valid input type for the schema.
  */
 export function getPreprocessorByZodType(
-  schema: zCore.$ZodTypes,
+  _schema: zCore.$ZodType,
 ): (arg: string | undefined) => unknown {
-  const { def } = schema._zod;
+  const schema = _schema as zCore.$ZodTypes;
+  const {
+    _zod: { def },
+  } = schema;
 
   switch (def.type) {
     case "pipe":
-      return getPreprocessorByZodType(def.in as zCore.$ZodTypes);
+      return getPreprocessorByZodType(def.in);
     case "string":
     case "enum":
     case "undefined":
@@ -48,11 +48,11 @@ export function getPreprocessorByZodType(
       return json;
 
     case "default":
-      return getPreprocessorByZodType(def.innerType as zCore.$ZodTypes);
+      return getPreprocessorByZodType(def.innerType);
 
     case "optional": {
       const { innerType } = def;
-      const pp = getPreprocessorByZodType(innerType as zCore.$ZodTypes);
+      const pp = getPreprocessorByZodType(innerType);
       return (arg) => {
         if (arg === undefined) return arg;
         return pp(arg);
@@ -61,7 +61,7 @@ export function getPreprocessorByZodType(
 
     case "nullable": {
       const { innerType } = def;
-      const pp = getPreprocessorByZodType(innerType as zCore.$ZodTypes);
+      const pp = getPreprocessorByZodType(innerType);
       return (arg) => {
         // coerce undefined to null.
         if (arg == null) return null;
@@ -94,11 +94,19 @@ export function getPreprocessorByZodType(
       return nullProcessor;
 
     case "union":
-      return throwIfCurrentlyUnsupported(def.type);
+      throw new Error(
+        `Zod type not yet supported: "${def.type}" (PRs welcome)`,
+      );
 
     case "any":
     case "unknown":
-      return throwIfUnknown(def.type);
+      throw new Error(
+        [
+          `Zod type not supported: ${def.type}`,
+          "You can use `z.string()` or `z.string().optional()` instead of the above type.",
+          "(Environment variables are already constrained to `string | undefined`.)",
+        ].join("\n"),
+      );
 
     // some of these types could maybe be supported (if only via the identity
     // function), but don't necessarily represent something meaningful as a
@@ -120,7 +128,9 @@ export function getPreprocessorByZodType(
     case "set":
     case "symbol":
     case "readonly":
-      return throwIfWillNeverBeSupported(def.type);
+      throw new Error(
+        `Zod type not yet supported: "${def.type}" (PRs welcome)`,
+      );
     default: {
       assertNever(def);
     }
@@ -131,9 +141,6 @@ export function getPreprocessorByZodType(
  * Given a Zod schema, return the schema wrapped in a preprocessor that tries to
  * convert a string to the schema's input type.
  */
-export function getSchemaWithPreprocessor(schema: zCore.$ZodTypes) {
-  return z.preprocess(
-    getPreprocessorByZodType(schema) as (arg: unknown) => unknown,
-    schema,
-  );
+export function getSchemaWithPreprocessor(schema: zCore.$ZodType) {
+  return z.preprocess(getPreprocessorByZodType(schema), schema);
 }

@@ -1,4 +1,4 @@
-import { $ZodTypes, $ZodType, $ZodDefault } from "zod/v4/core";
+import { $ZodType, $ZodDefault } from "zod/v4/core";
 import { getSchemaWithPreprocessor } from "./preprocessors.js";
 import {
   ErrorWithContext,
@@ -148,9 +148,7 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
           //  we'd report a default value that _should_ have passed.)
           parsed[key] = (spec.def.innerType as z.ZodType).parse(defaultValue);
         } else {
-          parsed[key] = getSchemaWithPreprocessor(
-            schemaOrSpec as $ZodTypes,
-          ).parse(envValue);
+          parsed[key] = getSchemaWithPreprocessor(schemaOrSpec).parse(envValue);
         }
       } else if (envValue == null) {
         [defaultUsed, defaultValue] = resolveDefaultValueForSpec(
@@ -165,14 +163,14 @@ export function parseEnvImpl<T extends Schemas & RestrictSchemas<T>>(
           // schema-with-preprocessor (it's an edge case, but our schema might
           // accept `null`, and the preprocessor will convert `undefined` to
           // `null` for us).
-          parsed[key] = getSchemaWithPreprocessor(
-            schemaOrSpec.schema as $ZodTypes,
-          ).parse(envValue);
+          parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
+            envValue,
+          );
         }
       } else {
-        parsed[key] = getSchemaWithPreprocessor(
-          schemaOrSpec.schema as $ZodTypes,
-        ).parse(envValue);
+        parsed[key] = getSchemaWithPreprocessor(schemaOrSpec.schema).parse(
+          envValue,
+        );
       }
     } catch (e) {
       errors.push({

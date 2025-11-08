@@ -78,21 +78,3 @@ export const nullProcessor = (arg: Input) => {
   if (arg == null) return null;
   return arg;
 };
-
-export const throwIfUnknown = (typeName: string) => {
-  throw new Error(
-    [
-      `Zod type not supported: ${typeName}`,
-      "You can use `z.string()` or `z.string().optional()` instead of the above type.",
-      "(Environment variables are already constrained to `string | undefined`.)",
-    ].join("\n"),
-  );
-};
-
-export const throwIfCurrentlyUnsupported = (typeName: string) => {
-  throw new Error(`Zod type not yet supported: "${typeName}" (PRs welcome)`);
-};
-
-export const throwIfWillNeverBeSupported = (typeName: string) => {
-  throw new Error(`Zod type not supported: ${typeName}`);
-};
