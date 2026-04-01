@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import * as z from "zod";
 
 import { parseEnv } from "./index.js";
@@ -469,7 +470,6 @@ describe("parseCore", () => {
               .int()
               .transform((n) => String(n)),
             defaults: {
-              // @ts-expect-error (2322) -- should be number
               _: new Map(),
             },
             // @ts-expect-error (2322) -- excess properties should be checked

@@ -1,1 +1,6 @@
 __snapshots__
+dist/
+dist-cjs/
+node_modules/
+pnpm-lock.yaml
+pnpm-workspace.yaml

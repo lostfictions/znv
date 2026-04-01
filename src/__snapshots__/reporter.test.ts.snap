@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`reporter should test the error output 1`] = `
-"Errors found while parsing environment:
+exports[`reporter > should test the error output 1`] = `
+[Error: Errors found while parsing environment:
 [CONFIG_OBJECT]: This is a very special object that holds configuration.
   ✖ Invalid input: expected string, received number
   → at a
@@ -35,5 +35,5 @@ exports[`reporter should test the error output 1`] = `
   ✖ Too big: expected number to be <=65535
     (received undefined)
     (used default of 70000)
-"
+]
 `;

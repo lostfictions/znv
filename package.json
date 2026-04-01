@@ -1,6 +1,6 @@
 {
   "name": "znv",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Parse your environment with Zod schemas",
   "license": "MIT",
   "keywords": [
@@ -49,6 +49,8 @@
     }
   },
   "scripts": {
+    "prepare": "husky",
+    "pre-commit": "run-s -l \"lint\" \"test\"",
     "build": "run-s -l \"build:*\"",
     "build:clean": "rm -rf dist/ dist-cjs/",
     "build:mjs": "tsc --project tsconfig.build.json",
@@ -57,48 +59,35 @@
     "test": "run-p -cl \"test:*\"",
     "test:ts": "tsc --noEmit",
     "test:eslint": "eslint --color src",
-    "test:jest": "jest --colors",
+    "test:vitest": "vitest run",
     "test:prettier": "prettier -l \"src/**/*\"",
     "test:attw": "attw . --pack --profile node16",
     "prettier": "prettier \"src/**/*\" --write",
-    "jest": "jest --colors --watch",
+    "vitest": "vitest --watch",
+    "lint": "eslint .",
+    "postlint": "prettier --check .",
+    "lint-fix": "eslint . --fix",
+    "postlint-fix": "prettier --write .",
     "prepublishOnly": "run-s -l test build"
   },
   "peerDependencies": {
     "zod": "^4"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.2",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.10",
-    "eslint": "^9.22.0",
-    "eslint-config-lostfictions": "^7.0.0",
-    "jest": "^29.7.0",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^3.5.3",
-    "ts-jest": "^29.2.6",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "zod": "~4.1.12"
+    "@arethetypeswrong/cli": "0.18.2",
+    "@commitlint/cli": "20.5.2",
+    "@commitlint/config-conventional": "20.5.0",
+    "@types/node": "20.19.39",
+    "@vitest/ui": "4.1.5",
+    "eslint": "10.2.1",
+    "eslint-config-lostfictions": "8.1.1",
+    "husky": "9.1.7",
+    "npm-run-all2": "^8.0.4",
+    "prettier": "3.8.3",
+    "ts-node": "10.9.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5",
+    "zod": "~4.4.1"
   },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    },
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "rootDir": "src",
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "isolatedModules": true,
-          "useESM": true
-        }
-      ]
-    }
-  },
-  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
+  "packageManager": "pnpm@10.33.2"
 }

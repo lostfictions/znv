@@ -24,7 +24,7 @@
 
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
-import { isatty } from "tty";
+import { isatty } from "node:tty";
 
 const {
   env = {},

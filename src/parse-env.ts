@@ -55,8 +55,7 @@ export type RestrictSchemas<T extends Schemas> = {
   [K in keyof T]: T[K] extends SimpleSchema
     ? SimpleSchema
     : T[K] extends DetailedSpec
-      ? DetailedSpec<T[K]["schema"]> &
-          Omit<Record<keyof T[K], never>, DetailedSpecKeys>
+      ? DetailedSpec & Omit<Record<keyof T[K], never>, DetailedSpecKeys>
       : never;
 };
 

@@ -1,6 +1,6 @@
 import { $ZodError, toDotPath } from "zod/v4/core";
-import type { Schemas } from "./parse-env.js";
 import type * as z from "zod/v4";
+import type { Schemas } from "./parse-env.js";
 
 export interface ErrorWithContext {
   /** The env var name. */
@@ -50,7 +50,7 @@ function prettifyError(
 ): string {
   const lines: string[] = [];
   // sort by path length
-  const issues = [...error.issues].sort(
+  const issues = [...error.issues].toSorted(
     (a, b) => a.path.length - b.path.length,
   );
 

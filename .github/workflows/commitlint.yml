@@ -1,0 +1,18 @@
+name: commitlint
+
+on: [push]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    env:
+      CONFIG_FILE: commitlint.config.mjs
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: ${{ env.CONFIG_FILE }}
+          sparse-checkout-cone-mode: false
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: ${{ env.CONFIG_FILE }}

@@ -1,0 +1,16 @@
+overrides:
+  # Cap at 1.x: ">=1.1.13" alone can resolve to brace-expansion@5, which breaks minimatch@3 (ESLint).
+  brace-expansion@<1.1.13: '>=1.1.13 <2.0.0'
+  brace-expansion@>=1.0.0 <=1.1.11: '>=1.1.12 <2.0.0'
+  brace-expansion@>=2.0.0 <2.0.3: '>=2.0.3'
+  brace-expansion@>=2.0.0 <=2.0.1: '>=2.0.2'
+  diff@>=4.0.0 <4.0.4: '>=4.0.4'
+  flatted@<3.4.0: '>=3.4.0'
+  flatted@<=3.4.1: '>=3.4.2'
+  js-yaml@<3.14.2: '>=3.14.2'
+  minimatch@<3.1.3: '>=3.1.3'
+  minimatch@<3.1.4: '>=3.1.4'
+  minimatch@>=9.0.0 <9.0.6: '>=9.0.6'
+  minimatch@>=9.0.0 <9.0.7: '>=9.0.7'
+  picomatch@<2.3.2: '>=2.3.2'
+  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
